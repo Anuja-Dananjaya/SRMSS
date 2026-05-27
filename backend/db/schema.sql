@@ -25,6 +25,7 @@ CREATE TABLE drivers (
     phone VARCHAR(20),
     address VARCHAR(255),
     status ENUM('available', 'on_trip', 'unavailable') DEFAULT 'available',
+    maxHoursPerDay DECIMAL(4,2) DEFAULT 8.00,
     userId INT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE SET NULL
@@ -51,6 +52,10 @@ CREATE TABLE routes (
     totalDistance DECIMAL(8,2),
     estimatedDuration INT,
     mapUrl VARCHAR(500),
+
+    routeType ENUM('long_distance', 'urban', 'rural', 'express') 
+    NOT NULL DEFAULT 'urban',
+
     status ENUM('active', 'inactive') DEFAULT 'active',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -74,6 +79,12 @@ CREATE TABLE schedules (
     departureTime TIME NOT NULL,
     arrivalTime TIME NOT NULL,
     scheduleDate DATE NOT NULL,
+    scheduleType ENUM('daily', 'weekly', 'monthly')
+    
+    NOT NULL DEFAULT 'daily',
+
+    notes TEXT,
+
     status ENUM('scheduled', 'ongoing', 'completed', 'delayed', 'cancelled') DEFAULT 'scheduled',
     actualDeparture DATETIME,
     actualArrival DATETIME,
@@ -109,4 +120,18 @@ CREATE TABLE maintenance (
     status ENUM('pending', 'completed') DEFAULT 'pending',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (vehicleId) REFERENCES vehicles(vehicleId) ON DELETE RESTRICT
+);
+
+-- 9. Activity Logs
+CREATE TABLE activity_logs (
+    logId INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    module VARCHAR(100) NOT NULL,
+    description TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (userId) 
+    REFERENCES users(userId) 
+    ON DELETE RESTRICT
 );
