@@ -11,6 +11,7 @@ const routeRoutes = require('./routes/routeRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const fuelRoutes = require('./routes/fuelRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/routes', routeRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/fuel', fuelRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/users', userRoutes);
 
 // Base route to test server
 app.get('/', (req, res) => {
