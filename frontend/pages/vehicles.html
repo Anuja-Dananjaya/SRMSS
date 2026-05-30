@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Vehicle Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f3f4f6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: #1f2937; margin-bottom: 20px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-card h3 { font-size: 28px; color: #3b82f6; }
+        
+        .btn-primary { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; margin: 0 5px; }
+        .btn-danger { background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-edit { background: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin: 0 3px; }
+        .btn-delete { background: #ef4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin: 0 3px; }
+        
+        table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 600; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-active { background: #10b981; color: white; }
+        .status-maintenance { background: #f59e0b; color: white; }
+        .status-inactive { background: #6b7280; color: white; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close { font-size: 24px; cursor: pointer; color: #6b7280; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; }
+        
+        .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .error { color: #ef4444; text-align: center; padding: 20px; }
+        
+        .nav { background: white; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; }
+        .nav a { margin-right: 20px; text-decoration: none; color: #3b82f6; }
+        .nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="vehicles.html">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+        
+        <h1>🚌 Vehicle Management</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card"><h3 id="totalVehicles">0</h3><p>Total Vehicles</p></div>
+            <div class="stat-card"><h3 id="activeVehicles">0</h3><p>Active</p></div>
+            <div class="stat-card"><h3 id="maintenanceVehicles">0</h3><p>Maintenance</p></div>
+            <div class="stat-card"><h3 id="totalMileage">0</h3><p>Total Mileage</p></div>
+        </div>
+        
+        <button class="btn-primary" onclick="openAddModal()">+ Add Vehicle</button>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Registration</th><th>Model</th><th>Capacity</th><th>Mileage</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="vehiclesTable">
+                    <tr><td colspan="7" class="loading">Loading vehicles...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="vehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Vehicle</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="vehicleForm">
+                <input type="hidden" id="vehicleId">
+                <div class="form-group">
+                    <label>Registration Number *</label>
+                    <input type="text" id="registrationNo" required>
+                </div>
+                <div class="form-group">
+                    <label>Model *</label>
+                    <input type="text" id="model" required>
+                </div>
+                <div class="form-group">
+                    <label>Capacity (seats) *</label>
+                    <input type="number" id="capacity" required>
+                </div>
+                <div class="form-group">
+                    <label>Mileage (km)</label>
+                    <input type="number" id="mileage" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Fuel Efficiency (km/L)</label>
+                    <input type="number" id="fuelEfficiency" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="status">
+                        <option value="active">Active</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        // Load vehicles on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVehicles();
+        });
+        
+        async function loadVehicles() {
+            try {
+                const response = await fetch(`${API_BASE}/vehicles`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayVehicles(data.vehicles);
+                    updateStats(data.vehicles);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('vehiclesTable').innerHTML = '<tr><td colspan="7" class="error">Failed to load vehicles. Make sure server is running.</td></tr>';
+            }
+        }
+        
+        function displayVehicles(vehicles) {
+            const tbody = document.getElementById('vehiclesTable');
+            
+            if (!vehicles || vehicles.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">No vehicles found. Click "Add Vehicle" to create one.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = vehicles.map(v => `
+                <tr>
+                    <td>${v.vehicleId}</td>
+                    <td><strong>${v.registrationNo}</strong></td>
+                    <td>${v.model}</td>
+                    <td>${v.capacity}</td>
+                    <td>${Number(v.mileage || 0).toLocaleString()}</td>
+                    <td><span class="status-badge status-${v.status}">${v.status}</span></td>
+                    <td>
+                        <button class="btn-edit" onclick="editVehicle(${v.vehicleId})">Edit</button>
+                        <button class="btn-delete" onclick="deleteVehicle(${v.vehicleId})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateStats(vehicles) {
+            const total = vehicles.length;
+            const active = vehicles.filter(v => v.status === 'active').length;
+            const maintenance = vehicles.filter(v => v.status === 'maintenance').length;
+            const totalMileage = vehicles.reduce((sum, v) => sum + Number(v.mileage || 0), 0);
+            
+            document.getElementById('totalVehicles').textContent = total;
+            document.getElementById('activeVehicles').textContent = active;
+            document.getElementById('maintenanceVehicles').textContent = maintenance;
+            document.getElementById('totalMileage').textContent = totalMileage.toLocaleString();
+        }
+        
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Vehicle';
+            document.getElementById('vehicleId').value = '';
+            document.getElementById('vehicleForm').reset();
+            document.getElementById('vehicleModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('vehicleModal').style.display = 'none';
+        }
+        
+        document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const vehicleId = document.getElementById('vehicleId').value;
+            const vehicleData = {
+                registrationNo: document.getElementById('registrationNo').value,
+                model: document.getElementById('model').value,
+                capacity: parseInt(document.getElementById('capacity').value),
+                mileage: parseFloat(document.getElementById('mileage').value) || 0,
+                fuelEfficiency: parseFloat(document.getElementById('fuelEfficiency').value) || null,
+                status: document.getElementById('status').value
+            };
+            
+            try {
+                let response;
+                if (vehicleId) {
+                    response = await fetch(`${API_BASE}/vehicles/${vehicleId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(vehicleData)
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/vehicles`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(vehicleData)
+                    });
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal();
+                    loadVehicles();
+                    alert('✓ ' + data.message);
+                } else {
+                    alert('✗ ' + data.message);
+                }
+            } catch (error) {
+                alert('✗ Error: ' + error.message);
+            }
+        });
+        
+        async function editVehicle(id) {
+            try {
+                const response = await fetch(`${API_BASE}/vehicles/${id}`);
+                const data = await response.json();
+                
+                if (data.success && data.vehicle) {
+                    document.getElementById('modalTitle').textContent = 'Edit Vehicle';
+                    document.getElementById('vehicleId').value = data.vehicle.vehicleId;
+                    document.getElementById('registrationNo').value = data.vehicle.registrationNo;
+                    document.getElementById('model').value = data.vehicle.model;
+                    document.getElementById('capacity').value = data.vehicle.capacity;
+                    document.getElementById('mileage').value = data.vehicle.mileage;
+                    document.getElementById('fuelEfficiency').value = data.vehicle.fuelEfficiency;
+                    document.getElementById('status').value = data.vehicle.status;
+                    document.getElementById('vehicleModal').style.display = 'flex';
+                }
+            } catch (error) {
+                alert('Error loading vehicle: ' + error.message);
+            }
+        }
+        
+        async function deleteVehicle(id) {
+            if (!confirm('Are you sure you want to delete this vehicle?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/vehicles/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loadVehicles();
+                    alert('✓ ' + data.message);
+                } else {
+                    alert('✗ ' + data.message);
+                }
+            } catch (error) {
+                alert('✗ Error: ' + error.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

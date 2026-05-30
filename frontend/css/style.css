@@ -1,0 +1,99 @@
+
+/* Badge Styles */
+.badge-urban { background: #10b981; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.badge-rural { background: #8b5cf6; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.badge-long_distance { background: #ef4444; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.badge-express { background: #f59e0b; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+
+/* Status Badges */
+.status-active { background: #10b981; color: white; }
+.status-maintenance { background: #f59e0b; color: white; }
+.status-inactive { background: #6b7280; color: white; }
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Stop Row */
+.stop-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+.stop-row input { flex: 1; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; }
+
+.btn-danger-small {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.btn-danger-small:hover { background: #dc2626; }
+
+.btn-secondary-small {
+    background: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.btn-secondary-small:hover { background: #4b5563; }
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+}
+.tab-btn {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+}
+.tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; margin-bottom: -2px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Map */
+.map-container { background: #f3f4f6; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+.route-selector { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; display: flex; gap: 15px; align-items: center; }
+.route-info-panel { background: white; padding: 20px; border-radius: 8px; margin-top: 15px; }
+
+/* Stats Small */
+.stats-grid.small { grid-template-columns: repeat(3, 1fr); margin-bottom: 20px; }
+
+/* Modal Large */
+.modal-xl { max-width: 800px; width: 90%; }
+
+/* Form Section */
+.form-section { padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 10px; }
+
+/* Loading Spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.text-center { text-align: center; }
+.loading { text-align: center; padding: 40px; }
+.btn-assign { background: #8b5cf6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin: 0 3px; }
