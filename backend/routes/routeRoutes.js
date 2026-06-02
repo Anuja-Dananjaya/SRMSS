@@ -1,23 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const routeController = require('../controllers/routeController');
-const auth = require('../middleware/auth');
+const verifyToken = require('../middleware/auth');
+const allowRoles = require('../middleware/roleCheck');
 
-// Basic CRUD routes
-router.get('/', auth, routeController.getAllRoutes);
-router.get('/:id', auth, routeController.getRouteById);
-router.post('/', auth, routeController.createRoute);
-router.put('/:id', auth, routeController.updateRoute);
-router.delete('/:id', auth, routeController.deleteRoute);
+// All routes require login
+router.use(verifyToken);
 
-// Assignment of routes
-router.get('/:routeId/available-vehicles', auth, routeController.getAvailableVehiclesForRoute);
-router.get('/:routeId/available-drivers', auth, routeController.getAvailableDriversForRoute);
-router.post('/:routeId/assign', auth, routeController.assignVehicleToRoute);
+// Static routes must come before dynamic /:id routes
+router.get('/active/list', allowRoles('admin', 'supervisor'), routeController.getActiveRoutes);
+router.get('/available-drivers', allowRoles('admin', 'supervisor'), routeController.getAvailableDrivers);
 
-// Map and helper routes
-router.get('/:id/map-data', auth, routeController.getRouteMapData);
-router.get('/active/list', auth, routeController.getActiveRoutes);
-router.get('/available-drivers', auth, routeController.getAvailableDrivers);
+// Basic CRUD
+router.get('/', allowRoles('admin', 'supervisor'), routeController.getAllRoutes);
+router.post('/', allowRoles('admin'), routeController.createRoute);
+router.get('/:id', allowRoles('admin', 'supervisor'), routeController.getRouteById);
+router.put('/:id', allowRoles('admin'), routeController.updateRoute);
+router.delete('/:id', allowRoles('admin'), routeController.deleteRoute);
+router.get('/:id/map-data', allowRoles('admin', 'supervisor'), routeController.getRouteMapData);
+
+// Assignment routes
+router.get('/:routeId/available-vehicles', allowRoles('admin', 'supervisor'), routeController.getAvailableVehiclesForRoute);
+router.get('/:routeId/available-drivers', allowRoles('admin', 'supervisor'), routeController.getAvailableDriversForRoute);
+router.post('/:routeId/assign', allowRoles('admin', 'supervisor'), routeController.assignVehicleToRoute);
 
 module.exports = router;

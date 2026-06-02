@@ -1,134 +1,166 @@
-const API_BASE = 'http://localhost:5000/api';
+
+const API = 'http://localhost:5000/api';
 const token = localStorage.getItem('token');
+let allVehicles = [];
 
-if (!token) {
-    window.location.href = 'login.html';
-}
+// Redirect to login if no token
+if (!token) window.location.href = 'login.html';
 
+// Load on page ready
 document.addEventListener('DOMContentLoaded', () => {
     loadUserInfo();
     loadVehicles();
 });
 
+// Load logged in user name
 async function loadUserInfo() {
     try {
-        const response = await fetch(`${API_BASE}/auth/me`, {
+        const res = await fetch(`${API}/auth/me`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
-        if (data.success) {
+        const data = await res.json();
+        if (data.user) {
             document.getElementById('userName').textContent = data.user.name;
         }
-    } catch (error) {
-        console.error('Error loading user:', error);
+    } catch (err) {
+        console.error('Error loading user:', err);
     }
 }
 
+// Load all vehicles
 async function loadVehicles() {
     try {
-        const response = await fetch(`${API_BASE}/vehicles`, {
+        const res = await fetch(`${API}/vehicles`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
-        
+        const data = await res.json();
+
         if (data.success) {
-            displayVehicles(data.vehicles);
-            updateStats(data.vehicles);
+            allVehicles = data.vehicles;
+            displayVehicles(allVehicles);
+            updateStats(allVehicles);
         } else {
-            alert('Failed to load vehicles');
+            showTableError('Failed to load vehicles.');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Network error');
+    } catch (err) {
+        showTableError('Server error. Make sure backend is running.');
     }
 }
 
+// Display vehicles in table
 function displayVehicles(vehicles) {
     const tbody = document.getElementById('vehiclesTableBody');
-    
+
     if (!vehicles || vehicles.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No vehicles found</td></tr>';
+        tbody.innerHTML = `
+                    <tr><td colspan="9">
+                        <div class="empty-state">
+                            <i class="fas fa-bus"></i>
+                            <p>No vehicles found. Click Add Vehicle to create one.</p>
+                        </div>
+                    </td></tr>`;
         return;
     }
-    
-    tbody.innerHTML = vehicles.map(vehicle => `
-        <tr>
-            <td>${vehicle.vehicleId}</td>
-            <td><strong>${vehicle.registrationNo}</strong></td>
-            <td>${vehicle.model}</td>
-            <td>${vehicle.capacity}</td>
-            <td>${Number(vehicle.mileage).toLocaleString()}</td>
-            <td>${vehicle.fuelEfficiency || '-'}</td>
-            <td><span class="status-badge status-${vehicle.status}">${formatStatus(vehicle.status)}</span></td>
-            <td>${vehicle.last_maintenance_date || '-'}</td>
-            <td class="actions">
-                <button class="btn-icon" onclick="viewVehicle(${vehicle.vehicleId})" title="View">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-icon" onclick="editVehicle(${vehicle.vehicleId})" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-icon" onclick="showMaintenance(${vehicle.vehicleId})" title="Maintenance">
-                    <i class="fas fa-wrench"></i>
-                </button>
-                <button class="btn-icon" onclick="changeStatus(${vehicle.vehicleId}, '${vehicle.status}')" title="Change Status">
-                    <i class="fas fa-exchange-alt"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+
+    tbody.innerHTML = vehicles.map((v, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${v.registrationNo}</strong></td>
+                    <td>${v.model}</td>
+                    <td>${v.capacity} seats</td>
+                    <td>${Number(v.mileage || 0).toLocaleString()}</td>
+                    <td>${v.fuelEfficiency ? v.fuelEfficiency + ' km/L' : '-'}</td>
+                    <td>${v.last_maintenance_date ? formatDate(v.last_maintenance_date) : '-'}</td>
+                    <td><span class="status-badge status-${v.status}">${formatStatus(v.status)}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-icon view" onclick="viewVehicle(${v.vehicleId})" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon edit" onclick="editVehicle(${v.vehicleId})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon status" onclick="openStatusModal(${v.vehicleId}, '${v.status}')" title="Update Status">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="deleteVehicle(${v.vehicleId})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
 }
 
+// Update stat cards
 function updateStats(vehicles) {
-    const total = vehicles.length;
-    const active = vehicles.filter(v => v.status === 'active').length;
-    const maintenance = vehicles.filter(v => v.status === 'maintenance').length;
-    const totalMileage = vehicles.reduce((sum, v) => sum + Number(v.mileage), 0);
-    
-    document.getElementById('totalVehicles').textContent = total;
-    document.getElementById('activeVehicles').textContent = active;
-    document.getElementById('maintenanceVehicles').textContent = maintenance;
+    document.getElementById('totalVehicles').textContent = vehicles.length;
+    document.getElementById('activeVehicles').textContent = vehicles.filter(v => v.status === 'active').length;
+    document.getElementById('maintenanceVehicles').textContent = vehicles.filter(v => v.status === 'maintenance').length;
+    const totalMileage = vehicles.reduce((sum, v) => sum + Number(v.mileage || 0), 0);
     document.getElementById('totalMileage').textContent = totalMileage.toLocaleString();
 }
 
-function formatStatus(status) {
-    const map = { 'active': 'Active', 'maintenance': 'Maintenance', 'inactive': 'Inactive' };
-    return map[status] || status;
-}
+// Filter vehicles
+function filterVehicles() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
 
-function openVehicleModal(vehicle = null) {
-    const modal = document.getElementById('vehicleModal');
-    document.getElementById('vehicleForm').reset();
-    
-    if (vehicle) {
-        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Vehicle';
-        document.getElementById('vehicleId').value = vehicle.vehicleId;
-        document.getElementById('registrationNo').value = vehicle.registrationNo;
-        document.getElementById('model').value = vehicle.model;
-        document.getElementById('capacity').value = vehicle.capacity;
-        document.getElementById('mileage').value = vehicle.mileage;
-        document.getElementById('fuelEfficiency').value = vehicle.fuelEfficiency;
-        document.getElementById('status').value = vehicle.status;
-    } else {
-        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Add Vehicle';
-        document.getElementById('vehicleId').value = '';
+    let filtered = allVehicles;
+
+    if (status !== 'all') {
+        filtered = filtered.filter(v => v.status === status);
     }
-    modal.style.display = 'flex';
+
+    if (search) {
+        filtered = filtered.filter(v =>
+            v.registrationNo.toLowerCase().includes(search) ||
+            v.model.toLowerCase().includes(search)
+        );
+    }
+
+    displayVehicles(filtered);
 }
 
-function closeVehicleModal() {
-    document.getElementById('vehicleModal').style.display = 'none';
+// Open add modal
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Vehicle';
+    document.getElementById('vehicleId').value = '';
+    document.getElementById('vehicleForm').reset();
+    document.getElementById('formAlert').innerHTML = '';
+    document.getElementById('vehicleModal').classList.add('open');
 }
 
-function closeViewModal() {
-    document.getElementById('viewVehicleModal').style.display = 'none';
+// Open edit modal
+async function editVehicle(id) {
+    try {
+        const res = await fetch(`${API}/vehicles/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success && data.vehicle) {
+            const v = data.vehicle;
+            document.getElementById('modalTitle').textContent = 'Edit Vehicle';
+            document.getElementById('vehicleId').value = v.vehicleId;
+            document.getElementById('registrationNo').value = v.registrationNo;
+            document.getElementById('model').value = v.model;
+            document.getElementById('capacity').value = v.capacity;
+            document.getElementById('mileage').value = v.mileage;
+            document.getElementById('fuelEfficiency').value = v.fuelEfficiency || '';
+            document.getElementById('status').value = v.status;
+            document.getElementById('formAlert').innerHTML = '';
+            document.getElementById('vehicleModal').classList.add('open');
+        }
+    } catch (err) {
+        alert('Failed to load vehicle details.');
+    }
 }
 
-document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
+// Save vehicle (create or update)
+async function saveVehicle() {
     const vehicleId = document.getElementById('vehicleId').value;
-    const vehicleData = {
+    const body = {
         registrationNo: document.getElementById('registrationNo').value,
         model: document.getElementById('model').value,
         capacity: parseInt(document.getElementById('capacity').value),
@@ -136,177 +168,195 @@ document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
         fuelEfficiency: parseFloat(document.getElementById('fuelEfficiency').value) || null,
         status: document.getElementById('status').value
     };
-    
+
+    if (!body.registrationNo || !body.model || !body.capacity) {
+        document.getElementById('formAlert').innerHTML =
+            '<div class="alert alert-error">Registration number, model and capacity are required.</div>';
+        return;
+    }
+
     try {
-        let response;
-        if (vehicleId) {
-            response = await fetch(`${API_BASE}/vehicles/${vehicleId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(vehicleData)
-            });
-        } else {
-            response = await fetch(`${API_BASE}/vehicles`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(vehicleData)
-            });
-        }
-        
-        const data = await response.json();
+        const url = vehicleId ? `${API}/vehicles/${vehicleId}` : `${API}/vehicles`;
+        const method = vehicleId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
         if (data.success) {
             closeVehicleModal();
             loadVehicles();
-            alert('✓ ' + data.message);
         } else {
-            alert('✗ ' + data.message);
+            document.getElementById('formAlert').innerHTML =
+                `<div class="alert alert-error">${data.message}</div>`;
         }
-    } catch (error) {
-        alert('✗ Failed to save vehicle');
+    } catch (err) {
+        document.getElementById('formAlert').innerHTML =
+            '<div class="alert alert-error">Server error. Please try again.</div>';
     }
-});
+}
 
+// View vehicle details
 async function viewVehicle(id) {
     try {
-        const response = await fetch(`${API_BASE}/vehicles/${id}`, {
+        const res = await fetch(`${API}/vehicles/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
-        
-        if (data.success) {
+        const data = await res.json();
+
+        if (data.success && data.vehicle) {
             const v = data.vehicle;
-            let maintHtml = '<h4>Maintenance History:</h4>';
+            let maintHtml = '';
+
             if (v.maintenance_history && v.maintenance_history.length > 0) {
-                maintHtml += '<ul>';
-                v.maintenance_history.forEach(m => {
-                    maintHtml += `<li><strong>${m.serviceDate}</strong> - ${m.maintenanceType}: ${m.description || 'No description'}</li>`;
-                });
-                maintHtml += '</ul>';
+                maintHtml = v.maintenance_history.map(m => `
+                            <div class="maintenance-item">
+                                <h4>${m.maintenanceType} — ${formatDate(m.serviceDate)}</h4>
+                                <p>${m.description || 'No description'} — Cost: Rs. ${m.cost || 0}</p>
+                            </div>
+                        `).join('');
             } else {
-                maintHtml += '<p>No maintenance records</p>';
+                maintHtml = '<p style="color:#6b7280">No maintenance records found.</p>';
             }
-            
+
             document.getElementById('viewVehicleContent').innerHTML = `
-                <div>
-                    <p><strong>Registration:</strong> ${v.registrationNo}</p>
-                    <p><strong>Model:</strong> ${v.model}</p>
-                    <p><strong>Capacity:</strong> ${v.capacity} seats</p>
-                    <p><strong>Mileage:</strong> ${Number(v.mileage).toLocaleString()} km</p>
-                    <p><strong>Fuel Efficiency:</strong> ${v.fuelEfficiency || 'N/A'} km/L</p>
-                    <p><strong>Status:</strong> ${formatStatus(v.status)}</p>
-                    <hr>
-                    ${maintHtml}
-                </div>
-            `;
-            document.getElementById('viewVehicleModal').style.display = 'flex';
+                        <div class="detail-row">
+                            <span class="detail-label">Registration No</span>
+                            <span class="detail-value">${v.registrationNo}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Model</span>
+                            <span class="detail-value">${v.model}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Capacity</span>
+                            <span class="detail-value">${v.capacity} seats</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Mileage</span>
+                            <span class="detail-value">${Number(v.mileage || 0).toLocaleString()} km</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Fuel Efficiency</span>
+                            <span class="detail-value">${v.fuelEfficiency ? v.fuelEfficiency + ' km/L' : 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="detail-value">
+                                <span class="status-badge status-${v.status}">${formatStatus(v.status)}</span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Maintenance Records</span>
+                            <span class="detail-value">${v.total_maintenance || 0}</span>
+                        </div>
+                        <h3 style="margin: 20px 0 12px; font-size:16px;">Maintenance History</h3>
+                        ${maintHtml}
+                    `;
+
+            document.getElementById('viewVehicleModal').classList.add('open');
         }
-    } catch (error) {
-        alert('Failed to load vehicle details');
+    } catch (err) {
+        alert('Failed to load vehicle details.');
     }
 }
 
-async function editVehicle(id) {
+// Open status modal
+function openStatusModal(id, currentStatus) {
+    document.getElementById('statusVehicleId').value = id;
+    document.getElementById('newStatus').value = currentStatus;
+    document.getElementById('statusModal').classList.add('open');
+}
+
+// Save status
+async function saveStatus() {
+    const id = document.getElementById('statusVehicleId').value;
+    const status = document.getElementById('newStatus').value;
+
     try {
-        const response = await fetch(`${API_BASE}/vehicles/${id}`, {
+        const res = await fetch(`${API}/vehicles/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            closeStatusModal();
+            loadVehicles();
+        } else {
+            alert(data.message);
+        }
+    } catch (err) {
+        alert('Failed to update status.');
+    }
+}
+
+// Delete vehicle
+async function deleteVehicle(id) {
+    if (!confirm('Are you sure you want to deactivate this vehicle?')) return;
+
+    try {
+        const res = await fetch(`${API}/vehicles/${id}`, {
+            method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
-        if (data.success) {
-            openVehicleModal(data.vehicle);
-        }
-    } catch (error) {
-        alert('Failed to load vehicle details');
-    }
-}
+        const data = await res.json();
 
-async function changeStatus(id, currentStatus) {
-    const newStatus = prompt(`Enter new status (active/maintenance/inactive):`, currentStatus);
-    if (!newStatus || newStatus === currentStatus) return;
-    
-    try {
-        const response = await fetch(`${API_BASE}/vehicles/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ status: newStatus })
-        });
-        const data = await response.json();
         if (data.success) {
             loadVehicles();
-            alert('✓ Status updated');
         } else {
-            alert('✗ ' + data.message);
+            alert(data.message);
         }
-    } catch (error) {
-        alert('Failed to update status');
+    } catch (err) {
+        alert('Failed to delete vehicle.');
     }
 }
 
-async function showMaintenance(id) {
-    try {
-        const response = await fetch(`${API_BASE}/vehicles/${id}/maintenance`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (data.success && data.maintenance.length > 0) {
-            let msg = 'Maintenance Records:\n\n';
-            data.maintenance.forEach(m => {
-                msg += `${m.serviceDate} - ${m.maintenanceType}: ${m.description || '-'}\n`;
-            });
-            alert(msg);
-        } else {
-            alert('No maintenance records found');
-        }
-    } catch (error) {
-        alert('Failed to load maintenance history');
-    }
+// Export CSV
+function exportCSV() {
+    let csv = 'ID,Registration,Model,Capacity,Mileage,Fuel Efficiency,Status\n';
+    allVehicles.forEach(v => {
+        csv += `${v.vehicleId},${v.registrationNo},${v.model},${v.capacity},${v.mileage},${v.fuelEfficiency || ''},${v.status}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vehicles_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
-function filterVehicles() {
-    const status = document.getElementById('statusFilter').value;
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    
-    fetch(`${API_BASE}/vehicles`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            let filtered = data.vehicles;
-            if (status !== 'all') {
-                filtered = filtered.filter(v => v.status === status);
-            }
-            if (search) {
-                filtered = filtered.filter(v => 
-                    v.registrationNo.toLowerCase().includes(search) ||
-                    v.model.toLowerCase().includes(search)
-                );
-            }
-            displayVehicles(filtered);
-        }
-    });
+// Close modals
+function closeVehicleModal() { document.getElementById('vehicleModal').classList.remove('open'); }
+function closeViewModal() { document.getElementById('viewVehicleModal').classList.remove('open'); }
+function closeStatusModal() { document.getElementById('statusModal').classList.remove('open'); }
+
+// Helpers
+function formatStatus(status) {
+    const map = { active: 'Active', maintenance: 'Maintenance', inactive: 'Inactive' };
+    return map[status] || status;
 }
 
-function exportVehicles() {
-    fetch(`${API_BASE}/vehicles`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            let csv = "ID,Registration,Model,Capacity,Mileage,Fuel Efficiency,Status\n";
-            data.vehicles.forEach(v => {
-                csv += `${v.vehicleId},${v.registrationNo},${v.model},${v.capacity},${v.mileage},${v.fuelEfficiency || ''},${v.status}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `vehicles_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-    });
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('en-GB');
+}
+
+function showTableError(msg) {
+    document.getElementById('vehiclesTableBody').innerHTML =
+        `<tr><td colspan="9"><div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>${msg}</p></div></td></tr>`;
 }
 
 function logout() {
