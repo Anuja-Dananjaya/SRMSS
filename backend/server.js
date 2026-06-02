@@ -13,6 +13,10 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const fuelRoutes = require('./routes/fuelRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const userRoutes = require('./routes/userRoutes');
+const activityRoutes = require('./routes/activityRoutes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
+
 
 const app = express();
 
@@ -35,6 +39,9 @@ app.use('/api/schedules', scheduleRoutes);
 app.use('/api/fuel', fuelRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/activities', activityRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
 
 // Base route to test server
 app.get('/', (req, res) => {
@@ -52,7 +59,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.SERVER_PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
