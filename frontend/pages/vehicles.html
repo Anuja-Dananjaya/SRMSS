@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Vehicle Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <span class="navbar-brand">🚌 SRMSS</span>
+        <div class="navbar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="drivers.html">Drivers</a>
+            <a href="vehicles.html" class="active">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="schedules.html">Schedules</a>
+            <a href="fuel.html">Fuel</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="reports.html">Reports</a>
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName">Loading...</span>
+            <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-bus"></i> Vehicle Management</h1>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" onclick="exportCSV()">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> Add Vehicle
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalVehicles">0</h3>
+                <p>Total Vehicles</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="activeVehicles">0</h3>
+                <p>Active</p>
+            </div>
+            <div class="stat-card yellow">
+                <h3 id="maintenanceVehicles">0</h3>
+                <p>Under Maintenance</p>
+            </div>
+            <div class="stat-card gray">
+                <h3 id="totalMileage">0</h3>
+                <p>Total Mileage (km)</p>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search by registration or model..." oninput="filterVehicles()">
+                <select id="statusFilter" class="filter-select" onchange="filterVehicles()">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Registration No</th>
+                        <th>Model</th>
+                        <th>Capacity</th>
+                        <th>Mileage (km)</th>
+                        <th>Fuel Efficiency</th>
+                        <th>Last Maintenance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="vehiclesTableBody">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading vehicles...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add / Edit Modal -->
+    <div id="vehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Vehicle</h2>
+                <button class="modal-close" onclick="closeVehicleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="formAlert"></div>
+                <form id="vehicleForm">
+                    <input type="hidden" id="vehicleId">
+                    <div class="form-group">
+                        <label>Registration Number *</label>
+                        <input type="text" id="registrationNo" placeholder="e.g. NB-1234" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Model *</label>
+                        <input type="text" id="model" placeholder="e.g. Ashok Leyland" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Capacity (seats) *</label>
+                            <input type="number" id="capacity" placeholder="e.g. 45" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="status">
+                                <option value="active">Active</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mileage (km)</label>
+                            <input type="number" id="mileage" placeholder="e.g. 50000" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Fuel Efficiency (km/L)</label>
+                            <input type="number" id="fuelEfficiency" placeholder="e.g. 8.5" step="0.1">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeVehicleModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveVehicle()">
+                    <i class="fas fa-save"></i> Save Vehicle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Modal -->
+    <div id="viewVehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Vehicle Details</h2>
+                <button class="modal-close" onclick="closeViewModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="viewVehicleContent"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Vehicle Status</h2>
+                <button class="modal-close" onclick="closeStatusModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="statusVehicleId">
+                <div class="form-group">
+                    <label>Select New Status</label>
+                    <select id="newStatus">
+                        <option value="active">Active</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeStatusModal()">Cancel</button>
+                <button class="btn btn-warning" onclick="saveStatus()">
+                    <i class="fas fa-save"></i> Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/vehicles.js"></script>
+    
+</body>
+
+</html>

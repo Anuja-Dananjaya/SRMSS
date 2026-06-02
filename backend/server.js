@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 const db = require('./config/db');
 
@@ -20,7 +21,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, '../frontend/pages')));
+app.use('/css', express.static(path.join(__dirname, '../frontend/css')));
+app.use('/js', express.static(path.join(__dirname, '../frontend/js')));
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/vehicles', vehicleRoutes);
@@ -35,9 +41,9 @@ app.get('/', (req, res) => {
   res.json({ message: 'SRMSS API is running' });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// 404 handler for API routes only
+app.use('/api', (req, res) => {
+  res.status(404).json({ message: 'API route not found' });
 });
 
 // Error handler
