@@ -10,7 +10,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: 'http://localhost:5001',
         description: 'Local Development Server',
       },
     ],
@@ -30,7 +30,10 @@ const options = {
       },
     ],
   },
+
   apis: ['./routes/*.js', './backend/routes/*.js'], // cover different working directory structures
+
+  
 };
 
 const specs = swaggerJsdoc(options);
