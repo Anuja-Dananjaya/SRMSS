@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000/api';
+const API = 'http://localhost:5001/api';
 const token = localStorage.getItem('token');
 let allSchedules = [];
 let allRoutes = [];
@@ -133,9 +133,6 @@ function displaySchedules(schedules) {
             <td><span class="status-badge status-${s.status}">${formatStatus(s.status)}</span></td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-icon status" onclick="openTripExecutionModal(${s.scheduleId}, '${s.status}', '${s.actualDeparture || ''}', '${s.actualArrival || ''}')" title="Execution Details">
-                        <i class="fas fa-clock"></i>
-                    </button>
                     <button class="btn-icon edit" onclick="editSchedule(${s.scheduleId})" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>

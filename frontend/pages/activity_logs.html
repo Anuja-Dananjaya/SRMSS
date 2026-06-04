@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Activity Logs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <nav class="navbar">
+        <span class="navbar-brand">🚌 SRMSS</span>
+        <div class="navbar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="drivers.html">Drivers</a>
+            <a href="vehicles.html">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="schedules.html">Schedules</a>
+            <a href="fuel.html">Fuel</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="reports.html">Reports</a>
+            <a href="activity_logs.html" class="active">Activity Log</a>
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName">Loading...</span>
+            <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8" style="padding: 30px; max-w: 1200px; margin: 0 auto;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="background-color: #eff6ff; color: #2563eb; padding: 12px; border-radius: 8px; font-size: 20px;">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div>
+                    <h1 style="margin: 0; font-size: 24px; color: #1e293b;">Activity Logs</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; color: #64748b;">Monitor system modifications and user interactions</p>
+                </div>
+            </div>
+            <div>
+                <button onclick="fetchLogs()" style="cursor: pointer; background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-size: 14px; color: #334155; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Refresh Data</span>
+                </button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px;">
+            <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <span id="totalLogs" style="display: block; font-size: 30px; font-weight: bold; color: #2563eb; margin-bottom: 5px;">0</span>
+                <span style="font-size: 14px; color: #64748b; font-weight: 500;">Total Retrieved Records</span>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <span id="uniqueUsers" style="display: block; font-size: 30px; font-weight: bold; color: #10b981; margin-bottom: 5px;">0</span>
+                <span style="font-size: 14px; color: #64748b; font-weight: 500;">Active Users Logged</span>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <span id="lastUpdated" style="display: block; font-size: 20px; font-weight: bold; color: #f59e0b; margin: 8px 0 5px 0;">--:--:--</span>
+                <span style="font-size: 14px; color: #64748b; font-weight: 500;">Last Synced Time</span>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 15px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="position: relative; width: 100%; max-width: 300px;">
+                <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #94a3b8;"></i>
+                <input type="text" id="logSearch" onkeyup="filterLogs()" placeholder="Search action, user, or email..." style="width: 100%; padding: 8px 12px 8px 35px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            <div style="font-size: 12px; color: #64748b; font-weight: 500;">
+                Showing top 200 chronological records
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                    <thead style="background: #f8fafc; color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0;">
+                        <tr>
+                            <th style="padding: 14px 20px;">Log ID</th>
+                            <th style="padding: 14px 20px;">Timestamp</th>
+                            <th style="padding: 14px 20px;">User Details</th>
+                            <th style="padding: 14px 20px;">Action Executed</th>
+                            <th style="padding: 14px 20px;">Details / Metadata</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody" style="color: #334155;">
+                        <tr id="loadingRow">
+                            <td colspan="5" style="padding: 50px; text-align: center; color: #64748b;">
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #2563eb;"></i>
+                                    <span>Fetching current activity logs from backend...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let cachedActivities = [];
+
+        // Dynamic API Call Wrapper connected to your Express Route
+        async function fetchLogs() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/activity-logs'); 
+                const data = await response.json();
+
+                if (data.success && Array.isArray(data.activities)) {
+                    cachedActivities = data.activities;
+                    renderTable(cachedActivities);
+                    updateMetrics(cachedActivities);
+                } else {
+                    showError(data.message || 'Malformed backend response format.');
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Could not reach backend API endpoint server.');
+            }
+        }
+
+        // Output matching data rows to screen
+        function renderTable(activities) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+
+            if (activities.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: #94a3b8;">No activity logs matched your scope.</td></tr>`;
+                return;
+            }
+
+            activities.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = "1px solid #f1f5f9";
+                
+                // Add quick hover effect dynamically
+                tr.onmouseenter = () => tr.style.backgroundColor = "#f8fafc";
+                tr.onmouseleave = () => tr.style.backgroundColor = "transparent";
+
+                const logId = log.id || log.logId || '#';
+                const formattedDate = log.createdAt ? new Date(log.createdAt).toLocaleString() : 'N/A';
+                const userName = log.userName || 'System Auto/Guest';
+                const userEmail = log.userEmail ? `<span style="font-size: 12px; color: #94a3b8; display: block;">${log.userEmail}</span>` : '';
+                const action = log.action || 'Unknown Event';
+                const details = log.details || JSON.stringify(log.meta || '-');
+
+                tr.innerHTML = `
+                    <td style="padding: 14px 20px; font-family: monospace; font-size: 12px; color: #64748b;">${logId}</td>
+                    <td style="padding: 14px 20px; white-space: nowrap; font-size: 13px; color: #475569;">${formattedDate}</td>
+                    <td style="padding: 14px 20px; white-space: nowrap;">
+                        <div style="font-weight: 600; color: #1e293b;">${userName}</div>
+                        ${userEmail}
+                    </td>
+                    <td style="padding: 14px 20px;">
+                        <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe;">
+                            ${action}
+                        </span>
+                    </td>
+                    <td style="padding: 14px 20px; font-family: monospace; font-size: 12px; color: #64748b; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${details}">
+                        ${details}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateMetrics(activities) {
+            document.getElementById('totalLogs').innerText = activities.length;
+            const uniqueUsersCount = new Set(activities.map(log => log.userId).filter(Boolean)).size;
+            document.getElementById('uniqueUsers').innerText = uniqueUsersCount;
+            document.getElementById('lastUpdated').innerText = new Date().toLocaleTimeString();
+        }
+
+        function filterLogs() {
+            const searchVal = document.getElementById('logSearch').value.toLowerCase();
+            const filtered = cachedActivities.filter(log => {
+                return (
+                    (log.userName && log.userName.toLowerCase().includes(searchVal)) ||
+                    (log.userEmail && log.userEmail.toLowerCase().includes(searchVal)) ||
+                    (log.action && log.action.toLowerCase().includes(searchVal)) ||
+                    (log.details && log.details.toLowerCase().includes(searchVal))
+                );
+            });
+            renderTable(filtered);
+        }
+
+        function showLoading(isLoading) {
+            if(isLoading) {
+                document.getElementById('logsTableBody').innerHTML = `
+                    <tr><td colspan="5" style="padding: 50px; text-align: center; color: #64748b;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #2563eb;"></i>
+                            <span>Fetching activity logs...</span>
+                        </div>
+                    </td></tr>`;
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('logsTableBody').innerHTML = `
+                <tr><td colspan="5" style="padding: 40px; text-align: center; color: #ef4444; background-color: #fef2f2;">
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+                        <span style="font-weight: 600;">Error loading data</span>
+                        <p style="margin: 0; font-size: 12px; color: #f87171;">${msg}</p>
+                    </div>
+                </td></tr>`;
+        }
+
+        window.onload = () => {
+            fetchLogs();
+        };
+    </script>
+</body>
+</html>

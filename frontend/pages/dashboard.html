@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Enterprise Dashboard</title>
+    <!-- Core Icon Assets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================
+           PROFESSIONAL DESIGN & ANIMATION MATRIX
+           ========================================== */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+        }
+
+        /* Full Page Height Fix */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #f8fafc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navbar Structure matching image_232482.png */
+        .navbar {
+            background-color: #111827;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 100%;
+        }
+
+        .navbar-nav a {
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .navbar-nav a:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .navbar-nav a.active {
+            color: white;
+            background-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #e5e7eb;
+            font-size: 14px;
+        }
+
+        /* Main Workspace: Stretches to fill available space */
+        .dashboard-container {
+            flex: 1;
+            padding: 32px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 100%;
+            animation: pageFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Card Component Animations */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid var(--slate-200);
+            border-radius: 14px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
+        }
+
+        .metric-card:hover .icon-box {
+            transform: scale(1.1);
+        }
+
+        .icon-box {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Multi-Column Main Split Section */
+        .content-split {
+            display: grid;
+            grid-template-columns: 1.6fr 1.1fr;
+            gap: 24px;
+            flex: 1; /* Stretches panel views to the full baseline of the viewport */
+        }
+
+        .panel-board {
+            background: white;
+            border: 1px solid var(--slate-200);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Action Buttons Grid Layout and Animation */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .action-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: 12px;
+            padding: 24px;
+            text-decoration: none;
+            color: var(--slate-700);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-button i {
+            font-size: 26px;
+            transition: transform 0.2s ease;
+        }
+
+        .action-button:hover {
+            background-color: white;
+            color: var(--slate-900);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        /* Color Coding Action Hover Intercept States */
+        .btn-drivers:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-drivers:hover i { transform: translateY(-2px) scale(1.05); }
+        
+        .btn-fleet:hover { border-color: var(--success); color: var(--success); }
+        .btn-fleet:hover i { transform: translateY(-2px) scale(1.05); }
+
+        .btn-schedules:hover { border-color: var(--warning); color: var(--warning); }
+        .btn-schedules:hover i { transform: translateY(-2px) scale(1.05); }
+
+        .btn-fuel:hover { border-color: #7c3aed; color: #7c3aed; }
+        .btn-fuel:hover i { transform: translateY(-2px) scale(1.05); }
+
+        /* Real-time Logger Component Container Timeline Items */
+        .log-item {
+            background: var(--slate-50);
+            border-radius: 10px;
+            padding: 14px;
+            border-left: 4px solid var(--slate-200);
+            font-size: 13px;
+            margin-bottom: 12px;
+            animation: logFadeIn 0.4s ease-out both;
+            transition: transform 0.2s ease;
+        }
+        .log-item:hover {
+            transform: translateX(3px);
+        }
+
+        /* Animation Keyframe Handlers */
+        @keyframes pageFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes logFadeIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Cascade Delay timings for metric cards entry flow */
+        .metric-card:nth-child(1) { animation-delay: 0.05s; }
+        .metric-card:nth-child(2) { animation-delay: 0.10s; }
+        .metric-card:nth-child(3) { animation-delay: 0.15s; }
+        .metric-card:nth-child(4) { animation-delay: 0.20s; }
+
+        @media (max-width: 1024px) {
+            .content-split { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-bus-alt" style="color: var(--primary);"></i> SRMSS
+        </div>
+        <div class="navbar-nav">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="drivers.html">Drivers</a>
+            <a href="vehicles.html">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="schedules.html">Schedules</a>
+            <a href="fuel.html">Fuel</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="reports.html">Reports</a>
+            <a href="activity_logs.html">Activity Log</a>
+        </div>
+        <div class="user-menu">
+            <span><i class="fas fa-user-shield" style="margin-right: 6px; color:#9ca3af;"></i> <span id="userName">Anuja Dananjaya</span></span>
+            <a href="#" onclick="handleLogout()" style="color: var(--danger); text-decoration: none; font-weight: 600;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Frame -->
+    <div class="dashboard-container">
+        
+        <!-- Welcome Jumbotron Section Header -->
+        <div>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: var(--slate-900); letter-spacing: -0.02em;">
+                Welcome Back, <span style="color: var(--primary);">Anuja Dananjaya</span>!
+            </h1>
+            <p style="margin: 6px 0 0 0; font-size: 14px; color: var(--slate-700);">System operational status matrix overview for today.</p>
+        </div>
+
+        <!-- Metric Monitoring Grid Tracker Block -->
+        <div class="metric-grid">
+            
+            <div class="metric-card">
+                <div>
+                    <span style="font-size: 13px; color: var(--slate-700); font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Active Drivers</span>
+                    <span id="metricDrivers" style="font-size: 32px; font-weight: 800; color: var(--slate-900);">5</span>
+                </div>
+                <div class="icon-box" style="background-color: #eff6ff; color: var(--primary);">
+                    <i class="fas fa-id-card"></i>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div>
+                    <span style="font-size: 13px; color: var(--slate-700); font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Fleet Fleet Size</span>
+                    <span id="metricVehicles" style="font-size: 32px; font-weight: 800; color: var(--slate-900);">14 Active</span>
+                </div>
+                <div class="icon-box" style="background-color: #ecfdf5; color: var(--success);">
+                    <i class="fas fa-bus"></i>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div>
+                    <span style="font-size: 13px; color: var(--slate-700); font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Active Schedules</span>
+                    <span id="metricSchedules" style="font-size: 32px; font-weight: 800; color: var(--slate-900);">8 Standard</span>
+                </div>
+                <div class="icon-box" style="background-color: #fffbeb; color: var(--warning);">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div>
+                    <span style="font-size: 13px; color: var(--slate-700); font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Open Maintenance</span>
+                    <span id="metricMaintenance" style="font-size: 32px; font-weight: 800; color: var(--danger);">2 Pending</span>
+                </div>
+                <div class="icon-box" style="background-color: #fef2f2; color: var(--danger);">
+                    <i class="fas fa-tools"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Content Layout Panels -->
+        <div class="content-split">
+            
+            <!-- Management Interface Control Deck Block -->
+            <div class="panel-board">
+                <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 700; color: var(--slate-800); text-transform: uppercase; letter-spacing: 0.05em;">Quick Operation Actions</h3>
+                <div style="width: 40px; height: 3px; background: var(--primary); border-radius: 2px; margin-bottom: 12px;"></div>
+                
+                <div class="action-grid">
+                    <a href="drivers.html" class="action-button btn-drivers">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Manage Drivers</span>
+                    </a>
+                    <a href="vehicles.html" class="action-button btn-fleet">
+                        <i class="fas fa-bus-alt"></i>
+                        <span>Dispatch Fleet</span>
+                    </a>
+                    <a href="schedules.html" class="action-button btn-schedules">
+                        <i class="fas fa-clock"></i>
+                        <span>Alter Schedules</span>
+                    </a>
+                    <a href="fuel.html" class="action-button btn-fuel">
+                        <i class="fas fa-gas-pump"></i>
+                        <span>Log Fuel Receipt</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Operational Activity Pipeline Stream Feed -->
+            <div class="panel-board">
+                <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 700; color: var(--slate-800); text-transform: uppercase; letter-spacing: 0.05em;">Recent System Logs</h3>
+                <div style="width: 40px; height: 3px; background: var(--slate-800); border-radius: 2px; margin-bottom: 20px;"></div>
+                
+                <div id="dashboardLogFeed" style="flex: 1; overflow-y: auto; max-height: 280px; padding-right: 4px;">
+                    <div style="text-align: center; color: #94a3b8; padding: 40px 0;">
+                        <i class="fas fa-circle-notch fa-spin" style="font-size: 20px; margin-bottom: 8px; color: var(--primary);"></i>
+                        <p style="margin:0; font-size: 13px;">Streaming dynamic operation state vectors...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const API = 'http://localhost:5001/api';
+
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // Fail-safe redirect if session variables drop
+                window.location.href = 'index.html';
+                return null;
+            }
+            return token;
+        }
+
+        async function loadDashboardData(token) {
+            try {
+                const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+                
+                // Concurrent API fetch loops
+                const [driversRes, logsRes] = await Promise.all([
+                    fetch(`${API}/drivers`, { headers }).catch(() => null),
+                    fetch(`${API}/activities`, { headers }).catch(() => null)
+                ]);
+
+                if (driversRes && driversRes.ok) {
+                    const drivers = await driversRes.json();
+                    document.getElementById('metricDrivers').innerText = Array.isArray(drivers) ? drivers.length : (drivers.drivers?.length || 5);
+                }
+
+                if (logsRes && logsRes.ok) {
+                    const logs = await logsRes.json();
+                    renderLogTimeline(Array.isArray(logs) ? logs.slice(0, 4) : []);
+                } else {
+                    displayLogPlaceholder();
+                }
+            } catch (err) {
+                console.error("Dashboard engine rendering error:", err);
+                displayLogPlaceholder();
+            }
+        }
+
+        function renderLogTimeline(logs) {
+            const container = document.getElementById('dashboardLogFeed');
+            container.innerHTML = '';
+
+            if (logs.length === 0) {
+                displayLogPlaceholder();
+                return;
+            }
+
+            logs.forEach((log, index) => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+                div.style.animationDelay = `${0.1 * index}s`;
+                
+                if (log.action?.includes('ADD') || log.action?.includes('CREATE')) div.style.borderLeftColor = "var(--success)";
+                if (log.action?.includes('DELETE') || log.action?.includes('ERR')) div.style.borderLeftColor = "var(--danger)";
+
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:700; color:var(--slate-800);">
+                        <span>${log.action}</span>
+                        <span style="font-size:11px; color:#94a3b8; font-weight:500; text-transform:uppercase;">${log.module || 'System'}</span>
+                    </div>
+                    <div style="color: var(--slate-700); font-size:12px; line-height:1.4;">${log.description}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function displayLogPlaceholder() {
+            document.getElementById('dashboardLogFeed').innerHTML = `
+                <div style="text-align: center; color: #94a3b8; padding: 40px 0; border: 2px dashed #f1f5f9; border-radius: 12px;">
+                    <i class="fas fa-folder-open" style="font-size: 24px; margin-bottom: 8px; color: #cbd5e1;"></i>
+                    <p style="margin:0; font-size: 13px; font-weight:500;">No operational history entries located today.</p>
+                </div>`;
+        }
+
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        window.onload = () => {
+            const token = checkAuthentication();
+            if (token) loadDashboardData(token);
+        };
+    </script>
+</body>
+</html>
