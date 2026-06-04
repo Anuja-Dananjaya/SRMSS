@@ -88,14 +88,10 @@ const updateMaintenance = (req, res) => {
     db.query(query, [upStatus, upCost, upDescription, upNextServiceDue, id], (err) => {
       if (err) return res.status(500).json({ success: false, message: 'Failed to update maintenance record.', error: err.message });
 
-      // If status completed, update vehicle status back to 'active' if it is under 'maintenance'
+      // If status completed, update vehicle status back to 'active'
       if (upStatus === 'completed') {
-        db.query('SELECT status FROM vehicles WHERE vehicleId = ?', [record.vehicleId], (errVeh, vehResults) => {
-          if (!errVeh && vehResults.length > 0 && vehResults[0].status === 'maintenance') {
-            db.query("UPDATE vehicles SET status = 'active' WHERE vehicleId = ?", [record.vehicleId], (errAct) => {
-              if (errAct) console.error('Failed to revert vehicle status to active:', errAct);
-            });
-          }
+        db.query("UPDATE vehicles SET status = 'active' WHERE vehicleId = ?", [record.vehicleId], (errAct) => {
+          if (errAct) console.error('Failed to update vehicle status to active:', errAct);
         });
       }
 
