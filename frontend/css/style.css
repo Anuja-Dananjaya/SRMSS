@@ -218,6 +218,30 @@
 }
 
 
+
+/* Driver Status Badges */
+.status-driver-available { background: #d1fae5; color: #065f46; }
+.status-driver-on_trip { background: #dbeafe; color: #1e40af; }
+.status-driver-unavailable { background: #f3f4f6; color: #374151; }
+
+/* License Badges */
+.license-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+.license-badge.expired { background: #fee2e2; color: #991b1b; }
+.license-badge.expiring { background: #fef3c7; color: #92400e; }
+
+/* Red stat card */
+.stat-card.red h3 { color: #ef4444; }
+
+
+
+
 /*vehicles.css */
 * {
     margin: 0;
