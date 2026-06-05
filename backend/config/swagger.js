@@ -1,41 +1,43 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
-const options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Smart Route Management and Scheduling System (SRMSS) API',
-      version: '1.0.0',
-      description: 'API Documentation for the SRMSS public transit depot scheduling, fuel management, maintenance logs, and system audit logs.',
-    },
-    servers: [
-      {
-        url: 'http://localhost:5001',
-        description: 'Local Development Server',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'Input your login JWT token to authorize API endpoints.',
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+// Swagger definition (OpenAPI 3.0)
+const swaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'SRMSS API Documentation',
+    version: '1.0.0',
+    description: 'Smart Route Management and Scheduling System (SRMSS) API',
   },
-
-  apis: ['./routes/*.js', './backend/routes/*.js'], // cover different working directory structures
-
-  
+  servers: [
+    {
+      url: `http://localhost:${process.env.SERVER_PORT || 5000}`,
+      description: 'Local development server',
+    },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
+  },
+  security: [{ bearerAuth: [] }],
 };
 
-const specs = swaggerJsdoc(options);
+// Options for swagger-jsdoc - it will look for JSDoc comments in the specified files
+const options = {
+  definition: swaggerDefinition,
+  // Paths to files containing OpenAPI definitions
+  apis: [
+    './routes/*.js',
+    './controllers/*.js',
+    './server.js',
+  ],
+};
 
-module.exports = specs;
+// Initialize swagger-jsdoc -> returns validated swagger spec in json format
+const swaggerSpecs = swaggerJsdoc(options);
+
+module.exports = swaggerSpecs;
