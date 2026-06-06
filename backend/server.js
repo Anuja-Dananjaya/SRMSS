@@ -15,6 +15,7 @@ const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const userRoutes = require('./routes/userRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const depotRoutes = require('./routes/depotRoutes');
 
 
 
@@ -41,6 +42,7 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/depots', depotRoutes);
 
 
 

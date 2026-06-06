@@ -1,7 +1,8 @@
 
-const API = 'http://localhost:5000/api';
+const API = 'http://localhost:5001/api';
 const token = localStorage.getItem('token');
 let allVehicles = [];
+let allDepotsForVehicles = [];
 
 // Redirect to login if no token
 if (!token) window.location.href = 'login.html';
@@ -10,6 +11,7 @@ if (!token) window.location.href = 'login.html';
 document.addEventListener('DOMContentLoaded', () => {
     loadUserInfo();
     loadVehicles();
+    loadDepotsForVehicleDropdown();
 });
 
 // Load logged in user name
@@ -44,6 +46,24 @@ async function loadVehicles() {
         }
     } catch (err) {
         showTableError('Server error. Make sure backend is running.');
+    }
+}
+
+// Load active depots for vehicle dropdown
+async function loadDepotsForVehicleDropdown() {
+    try {
+        const res = await fetch(`${API}/depots?status=active`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            allDepotsForVehicles = data.depots;
+            const select = document.getElementById('vehicleDepotId');
+            select.innerHTML = '<option value="">-- No Depot --</option>' +
+                data.depots.map(d => `<option value="${d.depotId}">${d.name}${d.location ? ' - ' + d.location : ''}</option>`).join('');
+        }
+    } catch (err) {
+        console.error('Failed to load depots:', err);
     }
 }
 
@@ -149,6 +169,7 @@ async function editVehicle(id) {
             document.getElementById('mileage').value = v.mileage;
             document.getElementById('fuelEfficiency').value = v.fuelEfficiency || '';
             document.getElementById('status').value = v.status;
+            document.getElementById('vehicleDepotId').value = v.depotId || '';
             document.getElementById('formAlert').innerHTML = '';
             document.getElementById('vehicleModal').classList.add('open');
         }
@@ -160,13 +181,15 @@ async function editVehicle(id) {
 // Save vehicle (create or update)
 async function saveVehicle() {
     const vehicleId = document.getElementById('vehicleId').value;
+    const depotIdVal = document.getElementById('vehicleDepotId').value;
     const body = {
         registrationNo: document.getElementById('registrationNo').value,
         model: document.getElementById('model').value,
         capacity: parseInt(document.getElementById('capacity').value),
         mileage: parseFloat(document.getElementById('mileage').value) || 0,
         fuelEfficiency: parseFloat(document.getElementById('fuelEfficiency').value) || null,
-        status: document.getElementById('status').value
+        status: document.getElementById('status').value,
+        depotId: depotIdVal ? parseInt(depotIdVal) : null
     };
 
     if (!body.registrationNo || !body.model || !body.capacity) {

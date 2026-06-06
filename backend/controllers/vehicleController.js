@@ -6,9 +6,11 @@ const getAllVehicles = (req, res) => {
     SELECT 
       v.*,
       COUNT(DISTINCT m.maintenanceId) as total_maintenance,
-      MAX(m.serviceDate) as last_maintenance_date
+      MAX(m.serviceDate) as last_maintenance_date,
+      dep.name as depotName, dep.location as depotLocation
     FROM vehicles v
     LEFT JOIN maintenance m ON m.vehicleId = v.vehicleId
+    LEFT JOIN depots dep ON v.depotId = dep.depotId
     GROUP BY v.vehicleId
     ORDER BY v.vehicleId DESC
   `;
@@ -53,7 +55,7 @@ const getVehicleById = (req, res) => {
 
 // Create new vehicle
 const createVehicle = (req, res) => {
-  const { registrationNo, model, capacity, status, mileage, fuelEfficiency } = req.body;
+  const { registrationNo, model, capacity, status, mileage, fuelEfficiency, depotId } = req.body;
 
   if (!registrationNo || !model || !capacity) {
     return res.status(400).json({
@@ -73,8 +75,8 @@ const createVehicle = (req, res) => {
     }
 
     const query = `
-      INSERT INTO vehicles (registrationNo, model, capacity, status, mileage, fuelEfficiency)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO vehicles (registrationNo, model, capacity, status, mileage, fuelEfficiency, depotId)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(query, [
@@ -83,7 +85,8 @@ const createVehicle = (req, res) => {
       capacity,
       status || 'active',
       mileage || 0,
-      fuelEfficiency || null
+      fuelEfficiency || null,
+      depotId || null
     ], (err, result) => {
       if (err) {
         return res.status(500).json({ success: false, message: 'Failed to create vehicle.', error: err.message });
@@ -107,7 +110,7 @@ const createVehicle = (req, res) => {
 // Update vehicle
 const updateVehicle = (req, res) => {
   const { id } = req.params;
-  const { registrationNo, model, capacity, status, mileage, fuelEfficiency } = req.body;
+  const { registrationNo, model, capacity, status, mileage, fuelEfficiency, depotId } = req.body;
 
   db.query('SELECT * FROM vehicles WHERE vehicleId = ?', [id], (err, results) => {
     if (err) {
@@ -122,7 +125,7 @@ const updateVehicle = (req, res) => {
 
     const query = `
       UPDATE vehicles 
-      SET registrationNo = ?, model = ?, capacity = ?, status = ?, mileage = ?, fuelEfficiency = ?
+      SET registrationNo = ?, model = ?, capacity = ?, status = ?, mileage = ?, fuelEfficiency = ?, depotId = ?
       WHERE vehicleId = ?
     `;
 
@@ -133,6 +136,7 @@ const updateVehicle = (req, res) => {
       status || current.status,
       mileage || current.mileage,
       fuelEfficiency || current.fuelEfficiency,
+      depotId !== undefined ? (depotId || null) : current.depotId,
       id
     ], (err) => {
       if (err) {

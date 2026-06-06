@@ -1,7 +1,8 @@
-const API = 'http://localhost:5000/api';
+const API = 'http://localhost:5001/api';
 const token = localStorage.getItem('token');
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 let allDrivers = [];
+let allDepotsForDrivers = [];
 
 // Redirect if not logged in
 if (!token) window.location.href = 'login.html';
@@ -9,6 +10,7 @@ if (!token) window.location.href = 'login.html';
 document.addEventListener('DOMContentLoaded', () => {
     loadUserInfo();
     loadDrivers();
+    loadDepotsForDropdown();
     checkRole();
 });
 
@@ -51,6 +53,24 @@ async function loadDrivers() {
         }
     } catch (err) {
         showTableError('Server error. Make sure backend is running.');
+    }
+}
+
+// Load active depots for dropdown
+async function loadDepotsForDropdown() {
+    try {
+        const res = await fetch(`${API}/depots?status=active`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            allDepotsForDrivers = data.depots;
+            const select = document.getElementById('driverDepotId');
+            select.innerHTML = '<option value="">-- No Depot --</option>' +
+                data.depots.map(d => `<option value="${d.depotId}">${d.name}${d.location ? ' - ' + d.location : ''}</option>`).join('');
+        }
+    } catch (err) {
+        console.error('Failed to load depots:', err);
     }
 }
 
@@ -181,6 +201,7 @@ async function editDriver(id) {
             document.getElementById('phone').value = d.phone || '';
             document.getElementById('address').value = d.address || '';
             document.getElementById('maxHoursPerDay').value = d.maxHoursPerDay || 8;
+            document.getElementById('driverDepotId').value = d.depotId || '';
             document.getElementById('driverFormAlert').innerHTML = '';
             document.getElementById('driverModal').classList.add('open');
         }
@@ -198,6 +219,7 @@ async function saveDriver() {
     const phone = document.getElementById('phone').value.trim();
     const address = document.getElementById('address').value.trim();
     const maxHoursPerDay = document.getElementById('maxHoursPerDay').value;
+    const depotId = document.getElementById('driverDepotId').value || null;
 
     if (!name || !licenseNo || !licenseExpiry) {
         document.getElementById('driverFormAlert').innerHTML =
@@ -205,7 +227,7 @@ async function saveDriver() {
         return;
     }
 
-    const body = { name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay };
+    const body = { name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay, depotId: depotId ? parseInt(depotId) : null };
 
     try {
         const url = driverId ? `${API}/drivers/${driverId}` : `${API}/drivers`;

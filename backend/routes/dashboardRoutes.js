@@ -6,6 +6,6 @@ const allowRoles = require('../middleware/roleCheck');
 
 router.use(verifyToken);
 
-router.get('/', allowRoles('admin', 'supervisor'), getDashboardData);
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), getDashboardData);
 
 module.exports = router;

@@ -1,9 +1,10 @@
-const API = 'http://localhost:5000/api';
+const API = 'http://localhost:5001/api';
 const token = localStorage.getItem('token');
 let allSchedules = [];
 let allRoutes = [];
 let allVehicles = [];
 let allDrivers = [];
+let allDepotsForSchedules = [];
 
 // Redirect if not logged in
 if (!token) window.location.href = 'login.html';
@@ -32,6 +33,7 @@ async function initPage() {
         loadRoutes(),
         loadVehicles(),
         loadDrivers(),
+        loadDepots(),
         loadSchedules()
     ]);
 }
@@ -60,13 +62,30 @@ async function loadVehicles() {
         });
         const data = await res.json();
         if (data.success) {
-            allVehicles = data.vehicles;
+            allVehicles = data.vehicles.filter(v => v.status === 'active');
             const vehicleSelect = document.getElementById('vehicleId');
             vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>' + 
                 allVehicles.map(v => `<option value="${v.vehicleId}">${v.registrationNo} - ${v.model} (${v.status})</option>`).join('');
         }
     } catch (err) {
         console.error('Error loading vehicles:', err);
+    }
+}
+
+async function loadDepots() {
+    try {
+        const res = await fetch(`${API}/depots?status=active`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            allDepotsForSchedules = data.depots;
+            const depotSelect = document.getElementById('scheduleDepotId');
+            depotSelect.innerHTML = '<option value="">-- No Depot --</option>' +
+                data.depots.map(d => `<option value="${d.depotId}">${d.name}${d.location ? ' - ' + d.location : ''}</option>`).join('');
+        }
+    } catch (err) {
+        console.error('Error loading depots:', err);
     }
 }
 
@@ -211,6 +230,7 @@ async function editSchedule(id) {
     document.getElementById('scheduleType').value = s.scheduleType;
     document.getElementById('status').value = s.status;
     document.getElementById('notes').value = s.notes || '';
+    document.getElementById('scheduleDepotId').value = s.depotId || '';
     
     document.getElementById('statusGroup').style.display = 'block';
     toggleRecurrence();
@@ -220,6 +240,7 @@ async function editSchedule(id) {
 
 async function saveSchedule() {
     const scheduleId = document.getElementById('scheduleId').value;
+    const depotIdVal = document.getElementById('scheduleDepotId').value;
     const body = {
         routeId: parseInt(document.getElementById('routeId').value),
         vehicleId: parseInt(document.getElementById('vehicleId').value),
@@ -230,7 +251,8 @@ async function saveSchedule() {
         scheduleType: document.getElementById('scheduleType').value,
         endDate: document.getElementById('endDate').value || null,
         notes: document.getElementById('notes').value,
-        status: document.getElementById('status').value || 'scheduled'
+        status: document.getElementById('status').value || 'scheduled',
+        depotId: depotIdVal ? parseInt(depotIdVal) : null
     };
 
     if (!body.routeId || !body.vehicleId || !body.driverId || !body.departureTime || !body.arrivalTime || !body.scheduleDate) {

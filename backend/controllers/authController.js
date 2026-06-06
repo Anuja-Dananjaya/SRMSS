@@ -11,9 +11,9 @@ const register = (req, res) => {
     return res.status(400).json({ message: 'Name, email, password and role are required.' });
   }
 
-  const validRoles =  ['admin', 'supervisor', 'operator'];
+  const validRoles = ['admin', 'supervisor', 'user', 'driver'];
   if (!validRoles.includes(role)) {
-    return res.status(400).json({ message: 'Invalid role.' });
+    return res.status(400).json({ message: 'Invalid role. Must be admin, supervisor, user, or driver.' });
   }
 
   // Check if email already exists

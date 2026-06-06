@@ -3,9 +3,11 @@ const db = require('../config/db');
 // Get all drivers
 const getAllDrivers = (req, res) => {
   const query = `
-    SELECT d.*, u.email, u.name as userName 
+    SELECT d.*, u.email, u.name as userName,
+           dep.name as depotName, dep.location as depotLocation
     FROM drivers d
     LEFT JOIN users u ON d.userId = u.userId
+    LEFT JOIN depots dep ON d.depotId = dep.depotId
     ORDER BY d.createdAt DESC
   `;
 
@@ -23,9 +25,11 @@ const getDriverById = (req, res) => {
   const { id } = req.params;
 
   const query = `
-    SELECT d.*, u.email, u.name as userName 
+    SELECT d.*, u.email, u.name as userName,
+           dep.name as depotName, dep.location as depotLocation
     FROM drivers d
     LEFT JOIN users u ON d.userId = u.userId
+    LEFT JOIN depots dep ON d.depotId = dep.depotId
     WHERE d.driverId = ?
   `;
 
@@ -44,7 +48,7 @@ const getDriverById = (req, res) => {
 
 // Create new driver
 const createDriver = (req, res) => {
-  const { name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay, userId } = req.body;
+  const { name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay, userId, depotId } = req.body;
 
   if (!name || !licenseNo || !licenseExpiry) {
     return res.status(400).json({ message: 'Name, license number and license expiry are required.' });
@@ -68,8 +72,8 @@ const createDriver = (req, res) => {
     }
 
     const query = `
-      INSERT INTO drivers (name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay, userId)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO drivers (name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay, userId, depotId)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(query, [
@@ -79,7 +83,8 @@ const createDriver = (req, res) => {
       phone || null,
       address || null,
       maxHoursPerDay || 8.00,
-      userId || null
+      userId || null,
+      depotId || null
     ], (err, result) => {
       if (err) {
         return res.status(500).json({ message: 'Failed to create driver.', error: err.message });
@@ -98,7 +103,7 @@ const createDriver = (req, res) => {
 // Update driver
 const updateDriver = (req, res) => {
   const { id } = req.params;
-  const { name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay } = req.body;
+  const { name, licenseNo, licenseExpiry, phone, address, maxHoursPerDay, depotId } = req.body;
 
   // Check driver exists
   db.query('SELECT * FROM drivers WHERE driverId = ?', [id], (err, results) => {
@@ -121,7 +126,7 @@ const updateDriver = (req, res) => {
 
     const query = `
       UPDATE drivers 
-      SET name = ?, licenseNo = ?, licenseExpiry = ?, phone = ?, address = ?, maxHoursPerDay = ?
+      SET name = ?, licenseNo = ?, licenseExpiry = ?, phone = ?, address = ?, maxHoursPerDay = ?, depotId = ?
       WHERE driverId = ?
     `;
 
@@ -132,6 +137,7 @@ const updateDriver = (req, res) => {
       phone || results[0].phone,
       address || results[0].address,
       maxHoursPerDay || results[0].maxHoursPerDay,
+      depotId !== undefined ? (depotId || null) : results[0].depotId,
       id
     ], (err) => {
       if (err) {

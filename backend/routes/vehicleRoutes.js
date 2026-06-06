@@ -7,11 +7,11 @@ const allowRoles = require('../middleware/roleCheck');
 // All routes require login
 router.use(verifyToken);
 
-// View routes - admin and supervisor
-router.get('/', allowRoles('admin', 'supervisor'), vehicleController.getAllVehicles);
-router.get('/available/for-assignment', allowRoles('admin', 'supervisor'), vehicleController.getAvailableVehicles);
-router.get('/:id', allowRoles('admin', 'supervisor'), vehicleController.getVehicleById);
-router.get('/:id/maintenance', allowRoles('admin', 'supervisor'), vehicleController.getVehicleMaintenance);
+// View routes - all authenticated roles
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), vehicleController.getAllVehicles);
+router.get('/available/for-assignment', allowRoles('admin', 'supervisor', 'user', 'driver'), vehicleController.getAvailableVehicles);
+router.get('/:id', allowRoles('admin', 'supervisor', 'user', 'driver'), vehicleController.getVehicleById);
+router.get('/:id/maintenance', allowRoles('admin', 'supervisor', 'user', 'driver'), vehicleController.getVehicleMaintenance);
 
 // Admin only routes
 router.post('/', allowRoles('admin'), vehicleController.createVehicle);

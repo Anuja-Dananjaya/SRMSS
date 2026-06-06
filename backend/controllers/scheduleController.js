@@ -161,11 +161,13 @@ const getAllSchedules = (req, res) => {
     SELECT s.*, 
            r.routeCode, r.startPoint, r.endPoint,
            v.registrationNo, v.model,
-           d.name as driverName
+           d.name as driverName,
+           dep.name as depotName, dep.location as depotLocation
     FROM schedules s
     LEFT JOIN routes r ON s.routeId = r.routeId
     LEFT JOIN vehicles v ON s.vehicleId = v.vehicleId
     LEFT JOIN drivers d ON s.driverId = d.driverId
+    LEFT JOIN depots dep ON s.depotId = dep.depotId
     ORDER BY s.scheduleDate DESC, s.departureTime ASC
   `;
 
@@ -179,7 +181,7 @@ const getAllSchedules = (req, res) => {
 
 // Create schedule(s)
 const createSchedule = async (req, res) => {
-  const { routeId, vehicleId, driverId, departureTime, arrivalTime, scheduleDate, scheduleType, endDate, notes } = req.body;
+  const { routeId, vehicleId, driverId, departureTime, arrivalTime, scheduleDate, scheduleType, endDate, notes, depotId } = req.body;
 
   if (!routeId || !vehicleId || !driverId || !departureTime || !arrivalTime || !scheduleDate) {
     return res.status(400).json({ success: false, message: 'Missing required fields.' });
@@ -198,10 +200,10 @@ const createSchedule = async (req, res) => {
     const insertPromises = dates.map(dateStr => {
       return new Promise((resolveInsert, rejectInsert) => {
         const query = `
-          INSERT INTO schedules (routeId, vehicleId, driverId, departureTime, arrivalTime, scheduleDate, scheduleType, notes, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')
+          INSERT INTO schedules (routeId, vehicleId, driverId, departureTime, arrivalTime, scheduleDate, scheduleType, notes, status, depotId)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?)
         `;
-        db.query(query, [routeId, vehicleId, driverId, departureTime, arrivalTime, dateStr, scheduleType || 'daily', notes || ''], (err, result) => {
+        db.query(query, [routeId, vehicleId, driverId, departureTime, arrivalTime, dateStr, scheduleType || 'daily', notes || '', depotId || null], (err, result) => {
           if (err) return rejectInsert(err);
           insertedCount++;
           resolveInsert(result);
@@ -227,7 +229,7 @@ const createSchedule = async (req, res) => {
 // Update schedule
 const updateSchedule = async (req, res) => {
   const { id } = req.params;
-  const { routeId, vehicleId, driverId, departureTime, arrivalTime, scheduleDate, scheduleType, notes, status, actualDeparture, actualArrival } = req.body;
+  const { routeId, vehicleId, driverId, departureTime, arrivalTime, scheduleDate, scheduleType, notes, status, actualDeparture, actualArrival, depotId } = req.body;
 
   db.query('SELECT * FROM schedules WHERE scheduleId = ?', [id], async (err, results) => {
     if (err) return res.status(500).json({ success: false, message: 'Database error.', error: err.message });
@@ -244,6 +246,7 @@ const updateSchedule = async (req, res) => {
     const upScheduleType = scheduleType || current.scheduleType;
     const upStatus = status || current.status;
     const upNotes = notes !== undefined ? notes : current.notes;
+    const upDepotId = depotId !== undefined ? (depotId || null) : current.depotId;
 
     // Run conflict detection excluding current scheduleId
     try {
@@ -266,7 +269,7 @@ const updateSchedule = async (req, res) => {
 
       const updateQuery = `
         UPDATE schedules 
-        SET routeId = ?, vehicleId = ?, driverId = ?, departureTime = ?, arrivalTime = ?, scheduleDate = ?, scheduleType = ?, notes = ?, status = ?, actualDeparture = ?, actualArrival = ?
+        SET routeId = ?, vehicleId = ?, driverId = ?, departureTime = ?, arrivalTime = ?, scheduleDate = ?, scheduleType = ?, notes = ?, status = ?, actualDeparture = ?, actualArrival = ?, depotId = ?
         WHERE scheduleId = ?
       `;
 
@@ -282,6 +285,7 @@ const updateSchedule = async (req, res) => {
         upStatus,
         formattedActualDeparture,
         formattedActualArrival,
+        upDepotId,
         id
       ], (err) => {
         if (err) return res.status(500).json({ success: false, message: 'Failed to update schedule.', error: err.message });
