@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Schedule Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <span class="navbar-brand">🚌 SRMSS</span>
+        <div class="navbar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="drivers.html">Drivers</a>
+            <a href="vehicles.html">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="schedules.html" class="active">Schedules</a>
+            <a href="fuel.html">Fuel</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="reports.html">Reports</a>
+            
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName">Loading...</span>
+            <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-calendar-alt"></i> Schedule Management</h1>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Create Schedule
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalSchedules">0</h3>
+                <p>Total Schedules</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="ongoingSchedules">0</h3>
+                <p>Ongoing Trips</p>
+            </div>
+            <div class="stat-card yellow">
+                <h3 id="scheduledSchedules">0</h3>
+                <p>Scheduled</p>
+            </div>
+            <div class="stat-card gray">
+                <h3 id="completedSchedules">0</h3>
+                <p>Completed Trips</p>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search by route, driver, or vehicle..." oninput="filterSchedules()">
+                <input type="date" id="dateFilter" class="filter-select" onchange="filterSchedules()">
+                <select id="statusFilter" class="filter-select" onchange="filterSchedules()">
+                    <option value="all">All Status</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="delayed">Delayed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Route Code</th>
+                        <th>Route Details</th>
+                        <th>Vehicle</th>
+                        <th>Driver</th>
+                        <th>Time (Dep → Arr)</th>
+                        <th>Recurrence</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="schedulesTableBody">
+                    <tr>
+                        <td colspan="10" class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading schedules...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content" style="width: 580px;">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create Schedule</h2>
+                <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="formAlert"></div>
+                <form id="scheduleForm">
+                    <input type="hidden" id="scheduleId">
+                    
+                    <div class="form-group">
+                        <label>Select Route *</label>
+                        <select id="routeId" required>
+                            <option value="">-- Select Route --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Select Vehicle *</label>
+                            <select id="vehicleId" required>
+                                <option value="">-- Select Vehicle --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select Driver *</label>
+                            <select id="driverId" required>
+                                <option value="">-- Select Driver --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Departure Time *</label>
+                            <input type="time" id="departureTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Arrival Time *</label>
+                            <input type="time" id="arrivalTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start / Schedule Date *</label>
+                            <input type="date" id="scheduleDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Schedule Type (Recurrence)</label>
+                            <select id="scheduleType" onchange="toggleRecurrence()">
+                                <option value="daily">Daily (One-off)</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="endDateGroup" style="display: none;">
+                        <label>End Date for Recurrence *</label>
+                        <input type="date" id="endDate">
+                    </div>
+
+                    <div class="form-group" id="statusGroup" style="display: none;">
+                        <label>Status</label>
+                        <select id="status">
+                            <option value="scheduled">Scheduled</option>
+                            <option value="ongoing">Ongoing</option>
+                            <option value="completed">Completed</option>
+                            <option value="delayed">Delayed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="notes" rows="2" placeholder="Route instructions, detour details, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSchedule()">
+                    <i class="fas fa-save"></i> Save Schedule
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Trip Execution Modal (Actual Times) -->
+    <!-- <div id="tripExecutionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Trip Progress</h2>
+                <button class="modal-close" onclick="closeTripExecutionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="execScheduleId">
+                <div class="form-group">
+                    <label>Trip Status</label>
+                    <select id="execStatus">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="delayed">Delayed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Actual Departure Date & Time</label>
+                    <input type="datetime-local" id="actualDeparture">
+                </div>
+                <div class="form-group">
+                    <label>Actual Arrival Date & Time</label>
+                    <input type="datetime-local" id="actualArrival">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTripExecutionModal()">Cancel</button>
+                <button class="btn btn-warning" onclick="saveTripExecution()">
+                    <i class="fas fa-check"></i> Update Trip
+                </button>
+            </div>
+        </div>
+    </div> -->
+
+    <script src="/js/schedules.js"></script>
+    
+</body>
+</html>

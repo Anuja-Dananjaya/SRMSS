@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Fuel Logs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <span class="navbar-brand">🚌 SRMSS</span>
+        <div class="navbar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="drivers.html">Drivers</a>
+            <a href="vehicles.html">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="schedules.html">Schedules</a>
+            <a href="fuel.html" class="active">Fuel</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="reports.html">Reports</a>
+            
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName">Loading...</span>
+            <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-gas-pump"></i> Fuel Log Management</h1>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Add Fuel Log
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalLogs">0</h3>
+                <p>Total Refuelings</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="totalAmount">0 L</h3>
+                <p>Total Fuel Volume</p>
+            </div>
+            <div class="stat-card yellow">
+                <h3 id="totalCost">Rs. 0</h3>
+                <p>Total Fuel Cost</p>
+            </div>
+            <div class="stat-card gray">
+                <h3 id="avgCostPerLiter">Rs. 0.00</h3>
+                <p>Average Cost per Liter</p>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search by vehicle registration..." oninput="filterFuelLogs()">
+                <input type="date" id="dateFilter" class="filter-select" onchange="filterFuelLogs()">
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Vehicle</th>
+                        <th>Schedule / Route</th>
+                        <th>Volume (Liters)</th>
+                        <th>Total Cost</th>
+                        <th>Odometer (km)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="fuelTableBody">
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading fuel logs...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Modal -->
+    <div id="fuelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Fuel Log</h2>
+                <button class="modal-close" onclick="closeFuelModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="formAlert"></div>
+                <form id="fuelForm">
+                    <div class="form-group">
+                        <label>Select Vehicle *</label>
+                        <select id="vehicleId" onchange="loadVehicleSchedules()" required>
+                            <option value="">-- Select Vehicle --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Schedule Date / Route (Optional)</label>
+                        <select id="scheduleId">
+                            <option value="">-- Select Schedule --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fuel Volume (Liters) *</label>
+                            <input type="number" id="fuelAmount" placeholder="e.g. 50" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Total Cost (Rs.) *</label>
+                            <input type="number" id="cost" placeholder="e.g. 18500" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Refuel Date *</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Odometer Reading (km)</label>
+                            <input type="number" id="odometerReading" placeholder="e.g. 102500" step="0.01">
+                            <small style="color: #6b7280;">Updates vehicle mileage if higher than current</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeFuelModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveFuelLog()">
+                    <i class="fas fa-save"></i> Save Log
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/fuel.js"></script>
+    
+</body>
+</html>

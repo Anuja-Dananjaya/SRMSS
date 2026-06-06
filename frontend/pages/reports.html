@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Reports & Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .report-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .report-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f3f4f6;
+            padding-bottom: 12px;
+        }
+        .report-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .report-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .report-card h4 {
+            margin: 0 0 10px;
+            color: #475569;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .report-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .activity-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .badge-create { background: #dcfce7; color: #15803d; }
+        .badge-update { background: #fef9c3; color: #a16207; }
+        .badge-delete { background: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <span class="navbar-brand">🚌 SRMSS</span>
+        <div class="navbar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="drivers.html">Drivers</a>
+            <a href="vehicles.html">Vehicles</a>
+            <a href="routes.html">Routes</a>
+            <a href="schedules.html">Schedules</a>
+            <a href="fuel.html">Fuel</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="reports.html" class="active">Reports</a>
+        
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName">Loading...</span>
+            <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-chart-bar"></i> Reports & Audit Logs</h1>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print PDF Report
+            </button>
+        </div>
+
+        <!-- 1. Fuel & Maintenance Analytics -->
+        <div class="report-section">
+            <div class="report-section-header">
+                <div class="report-section-title">
+                    <i class="fas fa-gas-pump" style="color: #3b82f6;"></i> Fleet Resource Utilization
+                </div>
+            </div>
+            <div class="report-grid">
+                <div class="report-card">
+                    <h4>Total Fuel Spent</h4>
+                    <div class="value" id="repTotalFuelSpent">Rs. 0</div>
+                </div>
+                <div class="report-card">
+                    <h4>Total Refueled Volume</h4>
+                    <div class="value" id="repTotalFuelVolume">0 Liters</div>
+                </div>
+                <div class="report-card">
+                    <h4>Total Maintenance Cost</h4>
+                    <div class="value" id="repTotalMaintSpent">Rs. 0</div>
+                </div>
+                <div class="report-card">
+                    <h4>Routine vs Repair Ratio</h4>
+                    <div class="value" id="repMaintRatio">0 / 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Scheduling Report -->
+        <div class="report-section">
+            <div class="report-section-header">
+                <div class="report-section-title">
+                    <i class="fas fa-route" style="color: #10b981;"></i> Schedule & Trip Completion Summary
+                </div>
+            </div>
+            <div class="report-grid">
+                <div class="report-card">
+                    <h4>Total Scheduled Runs</h4>
+                    <div class="value" id="repTotalRuns">0</div>
+                </div>
+                <div class="report-card">
+                    <h4>Completed Trips</h4>
+                    <div class="value" id="repCompletedRuns">0</div>
+                </div>
+                <div class="report-card">
+                    <h4>Cancellation Rate</h4>
+                    <div class="value" id="repCancelRate">0.00%</div>
+                </div>
+                <div class="report-card">
+                    <h4>Delayed Trips Count</h4>
+                    <div class="value" id="repDelayedRuns">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. System Audit Log -->
+        <div class="report-section">
+            <div class="report-section-header">
+                <div class="report-section-title">
+                    <i class="fas fa-history" style="color: #64748b;"></i> System Activity Logs
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="exportActivityLogsCSV()">
+                    <i class="fas fa-download"></i> Export Logs CSV
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Module</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityLogsTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading activity logs...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/js/reports.js"></script>
+    
+</body>
+</html>
