@@ -14,7 +14,8 @@ const fuelRoutes = require('./routes/fuelRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const userRoutes = require('./routes/userRoutes');
 const activityRoutes = require('./routes/activityRoutes');
-// Swagger documentation has been removed per user request.
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/fuel', fuelRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 
 
