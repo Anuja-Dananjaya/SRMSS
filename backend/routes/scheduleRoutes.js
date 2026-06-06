@@ -92,7 +92,7 @@ router.use(verifyToken);
  *                   items:
  *                     $ref: '#/components/schemas/Schedule'
  */
-router.get('/', allowRoles('admin', 'supervisor', 'operator'), getAllSchedules);
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), getAllSchedules);
 
 /**
  * @openapi
@@ -154,7 +154,7 @@ router.get('/', allowRoles('admin', 'supervisor', 'operator'), getAllSchedules);
  *                   items:
  *                     type: string
  */
-router.post('/check-conflicts', allowRoles('admin', 'supervisor', 'operator'), apiCheckConflicts);
+router.post('/check-conflicts', allowRoles('admin', 'supervisor'), apiCheckConflicts);
 
 /**
  * @openapi

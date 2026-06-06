@@ -8,18 +8,18 @@ const allowRoles = require('../middleware/roleCheck');
 router.use(verifyToken);
 
 // Static routes must come before dynamic /:id routes
-router.get('/active/list', allowRoles('admin', 'supervisor'), routeController.getActiveRoutes);
-router.get('/available-drivers', allowRoles('admin', 'supervisor'), routeController.getAvailableDrivers);
+router.get('/active/list', allowRoles('admin', 'supervisor', 'user', 'driver'), routeController.getActiveRoutes);
+router.get('/available-drivers', allowRoles('admin', 'supervisor', 'user', 'driver'), routeController.getAvailableDrivers);
 
 // Basic CRUD
-router.get('/', allowRoles('admin', 'supervisor'), routeController.getAllRoutes);
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), routeController.getAllRoutes);
 router.post('/', allowRoles('admin'), routeController.createRoute);
-router.get('/:id', allowRoles('admin', 'supervisor'), routeController.getRouteById);
+router.get('/:id', allowRoles('admin', 'supervisor', 'user', 'driver'), routeController.getRouteById);
 router.put('/:id', allowRoles('admin'), routeController.updateRoute);
 router.delete('/:id', allowRoles('admin'), routeController.deleteRoute);
-router.get('/:id/map-data', allowRoles('admin', 'supervisor'), routeController.getRouteMapData);
+router.get('/:id/map-data', allowRoles('admin', 'supervisor', 'user', 'driver'), routeController.getRouteMapData);
 
-// Assignment routes
+// Assignment routes - admin and supervisor only
 router.get('/:routeId/available-vehicles', allowRoles('admin', 'supervisor'), routeController.getAvailableVehiclesForRoute);
 router.get('/:routeId/available-drivers', allowRoles('admin', 'supervisor'), routeController.getAvailableDriversForRoute);
 router.post('/:routeId/assign', allowRoles('admin', 'supervisor'), routeController.assignVehicleToRoute);

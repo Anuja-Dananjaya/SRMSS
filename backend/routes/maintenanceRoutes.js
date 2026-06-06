@@ -73,7 +73,7 @@ router.use(verifyToken);
  *                   items:
  *                     $ref: '#/components/schemas/Maintenance'
  */
-router.get('/', allowRoles('admin', 'supervisor', 'operator'), getAllMaintenance);
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), getAllMaintenance);
 
 /**
  * @openapi

@@ -13,11 +13,11 @@ const allowRoles = require('../middleware/roleCheck');
 // All routes require login
 router.use(verifyToken);
 
-// Get all depots (admin, supervisor)
-router.get('/', allowRoles('admin', 'supervisor'), getAllDepots);
+// Get all depots (admin, supervisor, user, driver - view)
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), getAllDepots);
 
 // Get single depot
-router.get('/:id', allowRoles('admin', 'supervisor'), getDepotById);
+router.get('/:id', allowRoles('admin', 'supervisor', 'user', 'driver'), getDepotById);
 
 // Create depot - admin only
 router.post('/', allowRoles('admin'), createDepot);

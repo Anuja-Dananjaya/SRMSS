@@ -20,9 +20,11 @@ router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.put('/profile/change-password', changePassword);
 
-// Admin only routes
-router.get('/', allowRoles('admin'), getAllUsers);
-router.get('/:id', allowRoles('admin'), getUserById);
+// Admin and supervisor can list/view users
+router.get('/', allowRoles('admin', 'supervisor'), getAllUsers);
+router.get('/:id', allowRoles('admin', 'supervisor'), getUserById);
+
+// Admin only can modify/delete users
 router.put('/:id', allowRoles('admin'), updateUser);
 router.delete('/:id', allowRoles('admin'), deleteUser);
 

@@ -72,7 +72,7 @@ router.use(verifyToken);
  *                   items:
  *                     $ref: '#/components/schemas/FuelLog'
  */
-router.get('/', allowRoles('admin', 'supervisor', 'operator'), getAllFuelLogs);
+router.get('/', allowRoles('admin', 'supervisor', 'user', 'driver'), getAllFuelLogs);
 
 /**
  * @openapi
@@ -116,7 +116,7 @@ router.get('/', allowRoles('admin', 'supervisor', 'operator'), getAllFuelLogs);
  *       400:
  *         description: Missing required fields
  */
-router.post('/', allowRoles('admin', 'supervisor', 'operator'), addFuelLog);
+router.post('/', allowRoles('admin', 'supervisor'), addFuelLog);
 
 /**
  * @openapi
