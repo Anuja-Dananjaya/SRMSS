@@ -1,4 +1,4 @@
-const API = 'http://localhost:5001/api';
+const API = 'http://localhost:5000/api';
 
 // If already logged in redirect to dashboard
 const existingToken = localStorage.getItem('token');
