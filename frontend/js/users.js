@@ -100,7 +100,8 @@ function updateStats(users) {
     document.getElementById('totalUsers').textContent = users.length;
     document.getElementById('totalAdmins').textContent = users.filter(u => u.role === 'admin').length;
     document.getElementById('totalSupervisors').textContent = users.filter(u => u.role === 'supervisor').length;
-    document.getElementById('totalOperators').textContent = users.filter(u => u.role === 'operator').length;
+    document.getElementById('totalRegularUsers').textContent = users.filter(u => u.role === 'user').length;
+    document.getElementById('totalDriverUsers').textContent = users.filter(u => u.role === 'driver').length;
 }
 
 // Filter users
@@ -309,7 +310,7 @@ function closeDeleteModal() { document.getElementById('deleteModal').classList.r
 
 // Helpers
 function formatRole(role) {
-    const map = { admin: 'Admin', supervisor: 'Supervisor', operator: 'Operator' };
+    const map = { admin: 'Admin', supervisor: 'Supervisor', user: 'User', driver: 'Driver' };
     return map[role] || role;
 }
 
