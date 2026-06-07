@@ -5,11 +5,20 @@ require('dotenv').config();
 
 // Register new user — admin only
 const register = (req, res) => {
+  // Extract request data
   const { name, email, password, role, phone } = req.body;
 
+  // Basic validation
   if (!name || !email || !password || !role) {
     return res.status(400).json({ message: 'Name, email, password and role are required.' });
   }
+
+  // Only admins are allowed to create new users
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Only admins can register new users.' });
+  }
+
+
 
   const validRoles = ['admin', 'supervisor', 'user', 'driver'];
   if (!validRoles.includes(role)) {
