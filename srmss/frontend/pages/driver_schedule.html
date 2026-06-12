@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - My Trips</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body onload="initPage().then(loadMyTrips)">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+    <span class="navbar-brand">🚌 SRMSS</span>
+    <div class="navbar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="vehicles.html" >Vehicles</a>
+        <a href="routes.html">Routes</a>
+        <a href="schedules.html">Schedules</a>
+        <a href="driver_schedule.html" id="navMyTrips" class="active">My Trips</a>
+        <a href="fuel.html">Fuel</a>
+        <a href="maintenance.html">Maintenance</a>
+        <a href="reports.html">Reports</a>
+        <a href="users.html" id="navUsers">Users</a>
+        <a href="depots.html" id="navDepots">Depots</a>
+    </div>
+    <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span id="userName">Loading...</span>
+        <!-- <span id="userRole" class="role-badge" style="margin-left:6px;"></span> -->
+        <!-- <span id="userDepot" style="display:none; margin-left:6px; font-size:12px; 
+              color:#6b7280; background:#f3f4f6; padding:2px 8px; border-radius:10px;">
+        </span> -->
+        <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-route"></i> My Trips</h1>
+        <p style="color:#6b7280; margin-top:6px;">Trips assigned to you. Start and end your trips from here.</p>
+    </div>
+
+    <div id="tripsContainer">
+        <div class="empty-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading your assigned trips...</p>
+        </div>
+    </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/driver_schedule.js"></script>
+</body>
+</html>

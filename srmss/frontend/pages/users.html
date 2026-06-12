@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - User Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+   <nav class="navbar">
+    <span class="navbar-brand">🚌 SRMSS</span>
+    <div class="navbar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="vehicles.html" >Vehicles</a>
+        <a href="routes.html">Routes</a>
+        <a href="schedules.html">Schedules</a>
+        <a href="driver_schedule.html" id="navMyTrips">My Trips</a>
+        <a href="fuel.html">Fuel</a>
+        <a href="maintenance.html">Maintenance</a>
+        <a href="reports.html">Reports</a>
+        <a href="users.html" id="navUsers" class="active">Users</a>
+        <a href="depots.html" id="navDepots">Depots</a>
+    </div>
+    <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span id="userName">Loading...</span>
+        <!-- <span id="userRole" class="role-badge" style="margin-left:6px;"></span> -->
+        <!-- <span id="userDepot" style="display:none; margin-left:6px; font-size:12px; 
+              color:#6b7280; background:#f3f4f6; padding:2px 8px; border-radius:10px;">
+        </span> -->
+        <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</nav>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-users-cog"></i> User Management</h1>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Add User
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalUsers">0</h3>
+                <p>Total Users</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="totalAdmins">0</h3>
+                <p>Admins</p>
+            </div>
+            <div class="stat-card yellow">
+                <h3 id="totalSupervisors">0</h3>
+                <p>Supervisors</p>
+            </div>
+            <div class="stat-card gray">
+                <h3 id="totalOperators">0</h3>
+                <p>Operators</p>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Search by name or email..."
+                    oninput="filterUsers()"
+                >
+                <select id="roleFilter" class="filter-select" onchange="filterUsers()">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="operator">Operator</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Phone</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading users...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add / Edit Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Add User</h2>
+                <button class="modal-close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="userFormAlert"></div>
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="name" placeholder="e.g. Kamal Perera" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="email" placeholder="e.g. kamal@srmss.com" required>
+                    </div>
+                    <div id="passwordGroup" class="form-group">
+                        <label>Password *</label>
+                        <input type="password" id="password" placeholder="Minimum 6 characters">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Role *</label>
+                            <select id="role" onchange="toggleDepotField()">
+                                <option value="admin">Admin</option>
+                                <option value="supervisor">Supervisor</option>
+                                <option value="operator">Operator</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" id="phone" placeholder="e.g. 0771234567">
+                        </div>
+                    </div>
+                    <div class="form-group" id="depotGroup">
+                        <label>Assign Depot *</label>
+                        <select id="userDepotId">
+                            <option value="">-- Select Depot --</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveUser()">
+                    <i class="fas fa-save"></i> Save User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Modal -->
+    <div id="viewUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>User Details</h2>
+                <button class="modal-close" onclick="closeViewModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="viewUserContent"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Confirm Delete</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:#374151; font-size:15px;">
+                    Are you sure you want to delete user
+                    <strong id="deleteUserName"></strong>?
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <input type="hidden" id="deleteUserId">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/users.js"></script>
+    
+    
+</body>
+</html>
