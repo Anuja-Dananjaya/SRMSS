@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Route Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+    <span class="navbar-brand">🚌 SRMSS</span>
+    <div class="navbar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="vehicles.html" >Vehicles</a>
+        <a href="routes.html" class="active">Routes</a>
+        <a href="schedules.html">Schedules</a>
+        <a href="driver_schedule.html" id="navMyTrips">My Trips</a>
+        <a href="fuel.html">Fuel</a>
+        <a href="maintenance.html">Maintenance</a>
+        <a href="reports.html">Reports</a>
+        <a href="users.html" id="navUsers">Users</a>
+        <a href="depots.html" id="navDepots">Depots</a>
+    </div>
+    <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span id="userName">Loading...</span>
+        <!-- <span id="userRole" class="role-badge" style="margin-left:6px;"></span> -->
+        <!-- <span id="userDepot" style="display:none; margin-left:6px; font-size:12px; 
+              color:#6b7280; background:#f3f4f6; padding:2px 8px; border-radius:10px;">
+        </span> -->
+        <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</nav>
+
+    <div class="container">
+        <div id="depotFilterContainer"></div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-route"></i> Route Management</h1>
+            <button class="btn btn-primary" onclick="openRouteModal()">
+                <i class="fas fa-plus"></i> Create Route
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalRoutes">0</h3>
+                <p>Total Routes</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="activeRoutes">0</h3>
+                <p>Active Routes</p>
+            </div>
+            <div class="stat-card yellow">
+                <h3 id="expressRoutes">0</h3>
+                <p>Express Routes</p>
+            </div>
+            <div class="stat-card gray">
+                <h3 id="longDistanceRoutes">0</h3>
+                <p>Long Distance</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" id="listTab" onclick="switchTab('list')">
+                <i class="fas fa-list"></i> Route List
+            </button>
+            <button class="tab-btn" id="mapTab" onclick="switchTab('map')">
+                <i class="fas fa-map-marked-alt"></i> Map View
+            </button>
+        </div>
+
+        <!-- List Tab -->
+        <div id="listTabContent" class="tab-content active">
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <input
+                        type="text"
+                        id="routeSearch"
+                        class="search-input"
+                        placeholder="Search by code, start or end point..."
+                        oninput="filterRoutes()"
+                    >
+                    <select id="routeTypeFilter" class="filter-select" onchange="filterRoutes()">
+                        <option value="all">All Types</option>
+                        <option value="urban">Urban</option>
+                        <option value="rural">Rural</option>
+                        <option value="long_distance">Long Distance</option>
+                        <option value="express">Express</option>
+                    </select>
+                    <select id="routeStatusFilter" class="filter-select" onchange="filterRoutes()">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Route Code</th>
+                            <th>Start → End</th>
+                            <th>Distance</th>
+                            <th>Duration</th>
+                            <th>Type</th>
+                            <th>Stops</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routesTableBody">
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading routes...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Map Tab -->
+        <div id="mapTabContent" class="tab-content">
+            <div class="map-wrapper">
+                <div class="route-selector">
+                    <label><i class="fas fa-route"></i> Select Route to View:</label>
+                    <select id="mapRouteSelect" onchange="displayRouteOnMap()">
+                        <option value="">-- Select a Route --</option>
+                    </select>
+                </div>
+                <div id="routeMap" style="height: 450px; border-radius: 12px;"></div>
+                <div id="routeInfo" class="route-info-panel" style="display:none;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Create / Edit Route Modal -->
+    <div id="routeModal" class="modal">
+        <div class="modal-content" style="width: 620px;">
+            <div class="modal-header">
+                <h2 id="routeModalTitle">Create Route</h2>
+                <button class="modal-close" onclick="closeRouteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="routeFormAlert"></div>
+                <form id="routeForm">
+                    <input type="hidden" id="routeId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Route Code *</label>
+                            <input type="text" id="routeCode" placeholder="e.g. R101" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Route Type</label>
+                            <select id="routeType">
+                                <option value="urban">Urban</option>
+                                <option value="rural">Rural</option>
+                                <option value="long_distance">Long Distance</option>
+                                <option value="express">Express</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Point *</label>
+                            <input type="text" id="startPoint" placeholder="e.g. Colombo Fort" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Point *</label>
+                            <input type="text" id="endPoint" placeholder="e.g. Kandy" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Total Distance (km)</label>
+                            <input type="number" id="totalDistance" placeholder="e.g. 115.5" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Duration (minutes)</label>
+                            <input type="number" id="estimatedDuration" placeholder="e.g. 180">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Map URL (optional)</label>
+                        <input type="text" id="mapUrl" placeholder="e.g. https://maps.google.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Intermediate Stops</label>
+                        <div id="stopsContainer">
+                            <div class="stop-row">
+                                <input type="text" placeholder="Stop Name" class="stop-name">
+                                <input type="number" placeholder="Distance from start (km)" class="stop-distance" step="0.1">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeStop(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm" style="margin-top:10px;" onclick="addStop()">
+                            <i class="fas fa-plus"></i> Add Stop
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRouteModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveRoute()">
+                    <i class="fas fa-save"></i> Save Route
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Route Modal -->
+    <div id="viewRouteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Route Details</h2>
+                <button class="modal-close" onclick="closeViewRouteModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="viewRouteContent"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeViewRouteModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Modal -->
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Assign Vehicle and Driver</h2>
+                <button class="modal-close" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="assignAlert"></div>
+                <input type="hidden" id="assignRouteId">
+                <div class="form-group">
+                    <label>Select Vehicle</label>
+                    <select id="assignVehicleId">
+                        <option value="">-- Select Vehicle --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select Driver</label>
+                    <select id="assignDriverId">
+                        <option value="">-- Select Driver --</option>
+                    </select>
+                    <small id="licenseWarning" style="color:#f59e0b; display:none;">
+                        <i class="fas fa-exclamation-triangle"></i> License expiring soon
+                    </small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Schedule Date</label>
+                        <input type="date" id="assignDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Departure Time</label>
+                        <input type="time" id="assignDeparture" value="08:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Arrival Time</label>
+                    <input type="time" id="assignArrival" value="17:00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAssignment()">
+                    <i class="fas fa-check"></i> Assign
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/routes.js"></script>
+</body>
+</html>

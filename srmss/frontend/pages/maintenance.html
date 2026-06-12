@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMSS - Maintenance Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+    <span class="navbar-brand">🚌 SRMSS</span>
+    <div class="navbar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="drivers.html">Drivers</a>
+        <a href="vehicles.html" >Vehicles</a>
+        <a href="routes.html">Routes</a>
+        <a href="schedules.html">Schedules</a>
+        <a href="driver_schedule.html" id="navMyTrips">My Trips</a>
+        <a href="fuel.html">Fuel</a>
+        <a href="maintenance.html" class="active">Maintenance</a>
+        <a href="reports.html">Reports</a>
+        <a href="users.html" id="navUsers">Users</a>
+        <a href="depots.html" id="navDepots">Depots</a>
+    </div>
+    <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span id="userName">Loading...</span>
+        <!-- <span id="userRole" class="role-badge" style="margin-left:6px;"></span> -->
+        <!-- <span id="userDepot" style="display:none; margin-left:6px; font-size:12px; 
+              color:#6b7280; background:#f3f4f6; padding:2px 8px; border-radius:10px;">
+        </span> -->
+        <a href="#" onclick="logout()" style="color:#ef4444; margin-left:15px;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</nav>
+
+    <div class="container">
+        <div id="depotFilterContainer"></div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-tools"></i> Vehicle Maintenance</h1>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Add Maintenance Record
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <h3 id="totalTasks">0</h3>
+                <p>Total Service Logs</p>
+            </div>
+            <div class="stat-card green">
+                <h3 id="completedTasks">0</h3>
+                <p>Completed Tasks</p>
+            </div>
+            <div class="stat-card yellow">
+                <h3 id="pendingTasks">0</h3>
+                <p>Pending Repairs</p>
+            </div>
+            <div class="stat-card gray">
+                <h3 id="totalMaintCost">Rs. 0</h3>
+                <p>Total Maintenance Cost</p>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search by vehicle registration..." oninput="filterMaintenance()">
+                <select id="typeFilter" class="filter-select" onchange="filterMaintenance()">
+                    <option value="all">All Types</option>
+                    <option value="routine">Routine</option>
+                    <option value="repair">Repair</option>
+                    <option value="emergency">Emergency</option>
+                </select>
+                <select id="statusFilter" class="filter-select" onchange="filterMaintenance()">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Service Date</th>
+                        <th>Vehicle</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Cost</th>
+                        <th>Next Due</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="maintenanceTableBody">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading maintenance logs...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Modal -->
+    <div id="maintModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Maintenance Record</h2>
+                <button class="modal-close" onclick="closeMaintModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="formAlert"></div>
+                <form id="maintForm">
+                    <div class="form-group">
+                        <label>Select Vehicle *</label>
+                        <select id="vehicleId" required>
+                            <option value="">-- Select Vehicle --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Maintenance Type *</label>
+                            <select id="maintenanceType" required>
+                                <option value="routine">Routine Servicing</option>
+                                <option value="repair">Repair Works</option>
+                                <option value="emergency">Emergency Breakdown</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="status">
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Service Date *</label>
+                            <input type="date" id="serviceDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Next Service Due Date</label>
+                            <input type="date" id="nextServiceDue">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Estimated / Actual Cost (Rs.)</label>
+                        <input type="number" id="cost" placeholder="e.g. 7500" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description / Work Summary</label>
+                        <textarea id="description" rows="3" placeholder="Describe the parts replaced or issues diagnosed..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMaintModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveMaintLog()">
+                    <i class="fas fa-save"></i> Save Log
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Maintenance Modal -->
+    <div id="completeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complete Maintenance Task</h2>
+                <button class="modal-close" onclick="closeCompleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="completeMaintId">
+                <div class="form-group">
+                    <label>Actual Maintenance Cost (Rs.)</label>
+                    <input type="number" id="completeCost" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Service Description Notes (Optional)</label>
+                    <textarea id="completeDescription" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Next Service Due Date (Optional)</label>
+                    <input type="date" id="completeNextServiceDue">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCompleteModal()">Cancel</button>
+                <button class="btn btn-success" onclick="submitCompleteMaint()">
+                    <i class="fas fa-check-circle"></i> Complete Work
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/maintenance.js"></script>
+    
+</body>
+</html>
