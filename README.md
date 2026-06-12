@@ -1,1 +1,0 @@
-ENUM('admin', 'supervisor', 'user', 'driver')
