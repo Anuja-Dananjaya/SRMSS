@@ -37,6 +37,14 @@ async function loadUserInfo() {
         depotEl.textContent = data.user.depotName;
         depotEl.style.display = 'inline';
       }
+
+      // Set banner depot name
+      const depotBannerEl = document.getElementById('depotBanner');
+      if (depotBannerEl && data.user.depotName) {
+        const span = depotBannerEl.querySelector('#depotNameBanner');
+        if (span) span.textContent = data.user.depotName;
+        depotBannerEl.style.display = 'block';
+      }
     }
   } catch (err) {
     console.error('Error loading user:', err);
