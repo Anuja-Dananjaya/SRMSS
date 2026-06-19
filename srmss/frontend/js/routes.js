@@ -137,6 +137,10 @@ function switchTab(tab) {
 
 // Open add modal
 function openRouteModal(route = null) {
+    if (currentUser?.role !== 'admin' && !isSuperAdmin()) {
+        alert('Only admin users can create routes.');
+        return;
+    }
     document.getElementById('routeForm').reset();
     document.getElementById('routeFormAlert').innerHTML = '';
     document.getElementById('stopsContainer').innerHTML = `
