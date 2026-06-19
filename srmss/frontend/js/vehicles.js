@@ -159,6 +159,10 @@ function filterVehicles() {
 
 // Open add modal
 function openAddModal() {
+    if (currentUser?.role !== 'admin' && !isSuperAdmin()) {
+        alert('Only admin users can add vehicles.');
+        return;
+    }
     document.getElementById('modalTitle').textContent = 'Add Vehicle';
     document.getElementById('vehicleId').value = '';
     document.getElementById('vehicleForm').reset();

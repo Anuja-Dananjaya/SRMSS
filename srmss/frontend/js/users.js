@@ -174,9 +174,8 @@ async function saveUser() {
         return;
     }
 
-    if (!userId && password.length < 6) {
-        document.getElementById('userFormAlert').innerHTML =
-            '<div class="alert alert-error">Password must be at least 6 characters.</div>';
+    if (!userId && password.length < 8) {
+        document.getElementById('userFormAlert').innerHTML = '<div class="alert alert-error">Password must be at least 8 characters.</div>';
         return;
     }
 
