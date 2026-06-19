@@ -1,4 +1,4 @@
-const DS_API = (typeof API !== 'undefined') ? API : 'http://localhost:5001/api';
+const DS_API = (typeof API !== 'undefined') ? API : 'http://localhost:5000/api';
 const DS_TOKEN = (typeof token !== 'undefined') ? token : localStorage.getItem('token');
 
 async function loadMyTrips() {
